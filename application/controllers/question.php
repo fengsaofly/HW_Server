@@ -5,7 +5,7 @@
 */
 class Question extends CI_Controller
 {
-	// var $ak = '7244d82a2ef54bfa015a0d7d6f85f372';
+	var $ak = '7244d82a2ef54bfa015a0d7d6f85f372';
 	
     
 
