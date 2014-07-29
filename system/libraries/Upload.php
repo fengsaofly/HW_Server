@@ -53,6 +53,8 @@ class CI_Upload {
 	public $client_name				= '';
 
 	protected $_file_name_override	= '';
+	protected $_filePath = '';
+	protected $_storage_name = 'upload';
 
 	/**
 	 * Constructor
@@ -151,11 +153,12 @@ class CI_Upload {
 		}
 
 		// Is the upload path valid?
-		if ( ! $this->validate_upload_path())
-		{
-			// errors will already be set by validate_upload_path() so just return FALSE
-			return FALSE;
-		}
+		//不检查是否路径正确
+		// if ( ! $this->validate_upload_path())
+		// {
+		// 	// errors will already be set by validate_upload_path() so just return FALSE
+		// 	return FALSE;
+		// }
 
 		// Was the file able to be uploaded? If not, determine the reason why.
 		if ( ! is_uploaded_file($_FILES[$field]['tmp_name']))
@@ -310,9 +313,14 @@ class CI_Upload {
 		 * we'll use move_uploaded_file().  One of the two should
 		 * reliably work in most environments
 		 */
-		if ( ! @copy($this->file_temp, $this->upload_path.$this->file_name))
+		//上传文件到指定位置
+
+
+		// $this->createDir($this->upload_path); 
+		if ( ! copy($this->file_temp, $this->upload_path.$this->file_name))
 		{
-			if ( ! @move_uploaded_file($this->file_temp, $this->upload_path.$this->file_name))
+
+			if ( ! move_uploaded_file($this->file_temp, $this->upload_path.$this->file_name))
 			{
 				$this->set_error('upload_destination_error');
 				return FALSE;
@@ -325,6 +333,7 @@ class CI_Upload {
 		 * file was an image).  We use this information
 		 * in the "data" function.
 		 */
+
 		$this->set_image_properties($this->upload_path.$this->file_name);
 
 		return TRUE;
@@ -552,6 +561,7 @@ class CI_Upload {
 		// IE will sometimes return odd mime-types during upload, so here we just standardize all
 		// jpegs or pngs to the same file type.
 
+
 		$png_mimes  = array('image/x-png');
 		$jpeg_mimes = array('image/jpg', 'image/jpe', 'image/jpeg', 'image/pjpeg');
 
@@ -583,6 +593,8 @@ class CI_Upload {
 	 */
 	public function is_allowed_filetype($ignore_mime = FALSE)
 	{
+
+
 		if ($this->allowed_types == '*')
 		{
 			return TRUE;
@@ -1133,9 +1145,11 @@ class CI_Upload {
          * Upload more file
          *
          * $param       string  field
+         * $param		int     userID      
+         * $param		string	domain    
          * @return      array
          */
-        public function multiple($field)
+        public function multiple($field,$userID=0,$domain='question')
         {
                 // Is $_FILES[$field] set? If not, no reason to continue.
                 if ( ! isset($_FILES[$field]))
@@ -1145,7 +1159,7 @@ class CI_Upload {
                 }
  
                 // 临时文件上传数组，用于整合自己想要的形式
-                $tmpfiles       = array();
+                $tmpfiles  = array();
                 for ($i = 0, $len = count($_FILES[$field]['name']); $i < $len; $i ++)
                 {
                         if ($_FILES[$field]['size'][$i])
@@ -1159,24 +1173,31 @@ class CI_Upload {
                                         );
                         }
                 }
- 
+                    
                 //覆盖 $_FILES 内容
                 $_FILES = $tmpfiles;
  
                 $errors = array();
                 $files  = array();
+               
                 $index  = 0;
+            	$final_path = array();
+            	$real_path = array();
                 $_tmp_name      = preg_replace('/(.[a-z]+)$/', '', $this->file_name);
+                if ($_tmp_name == '') {
+                	$_tmp_name = 'sr';
+                }
+               
                 foreach ($_FILES as $key => $value)
                 {
-                        /*
-                         * 多文件上传的命名规则，用于替代CI中自由的文件命名方式
-                         *
-                         * -SR-17-50557-0.jpg
-                         * -SR-17-50557-1.jpg
-                         * -SR-17-50557-2.jpg
-                         */
-                        $this->_file_name_override      = $_tmp_name . '-' . $index;
+                        
+                        //构造文件名前缀
+	                    $this->_file_name_override      = $_tmp_name . '_' . $index;
+	                    
+	                    $domainUrl = $domain.'/'.$userID.'/';
+	                    $this->upload_path = STORAGE_BASE_URL.'/'.$domainUrl ;
+	                    //创建路径
+                   		$this->createDir($this->upload_path); 
                         if( ! $this->do_upload($key))
                         {
                                 $errors[$index] = $this->display_errors('', '');
@@ -1185,18 +1206,87 @@ class CI_Upload {
                         else
                         {
                                 $files[$index] = $this->data();
+                                $real_path[$index] = $this->upload_path.$files[$index]['file_name'];
+                                $final_path[$index] =  $this->getUrl($domainUrl,$files[$index]['file_name']);
                         }
                         $index  ++;
                 }
+                // $index=0;
                 // 返回数组
                 return array(
                                 'error' => $errors,
-                                'files' => $files
+                                'real_path' => $real_path,
+                                'final_path'=>$final_path
                         );
         }
+
+        /* 
+		* 功能：循环检测并创建文件夹 
+		* 参数：$path 文件夹路径 
+		* 返回： 
+		*/ 
+		function createDir($dir){ 
+			  
+	        $parts = explode('/', $dir);
+	        // $file = array_pop($parts);
+	        $dir = '';
+	        foreach($parts as $part)
+	            if(!is_dir($dir .= "/$part")) mkdir($dir);
+	        // file_put_contents("$dir/$file", $contents);
+    
+		} 
+				   /**
+	     * 获取文件storage访问地址
+	     *
+	     * Example:
+	     * <code>
+	     * #Get the url of a stored file
+	     * $stor = new SaeStorage();
+	     * $file_url = $stor->getUrl("domain","cdn_test.txt");
+	     * </code>
+	     *
+	     * @param string $domain Domain name
+	     * @param string $filename Filename you save
+	     * @return string. 
+	     */
+	    public function getUrl( $domain, $filename ) 
+	    {
+	        $domain = strtolower(trim($domain));
+	        $filename = $this->formatFilename($filename);
+	        // $domain = $this->getDom($domain);
+	 
+	        $this->_filePath = base_url($this->_storage_name.'/'.$domain) . "/$filename";
+	        return $this->_filePath;
+	    }
+	     /**
+	     * Format Filename.
+	     *
+	     * @param string $filename 
+	     * @return string 
+	     * @ignore
+	     */
+	    private function formatFilename($filename) 
+	    {
+	        $filename = trim($filename);
+	        $encodings = array( 'UTF-8', 'GBK', 'BIG5' );
+	        $charset = mb_detect_encoding( $filename , $encodings);
+	        if ( $charset !='UTF-8' ) {
+	            $filename = mb_convert_encoding( $filename, "UTF-8", $charset);
+	        }
+	 
+	        $filename = preg_replace('/\/\.\//', '/', $filename);
+	        $filename = ltrim($filename, '/');
+	        $filename = preg_replace('/^\.\//', '', $filename);
+	        while ( preg_match('/\/\//', $filename) ) {
+	            $filename = preg_replace('/\/\//', '/', $filename);
+	        }
+	        return $filename;
+	    }
  
 }
 // END Upload Class
+
+
 
 /* End of file Upload.php */
 /* Location: ./system/libraries/Upload.php */

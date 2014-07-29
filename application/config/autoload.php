@@ -80,6 +80,7 @@ $autoload['helper'] = array();
 |
 */
 
+// $autoload['config'] = array('global_params');
 $autoload['config'] = array();
 
 

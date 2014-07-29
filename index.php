@@ -175,6 +175,13 @@ if (defined('ENVIRONMENT'))
 	// Name of the "system folder"
 	define('SYSDIR', trim(strrchr(trim(BASEPATH, '/'), '/'), '/'));
 
+	//Path to Storage 
+	define('STORAGE_BASE_URL', getcwd().'/upload');
+
+	//Path to Storage 
+	define('DOWNLOAD_SLOT_SIZE', 5);
+
+
 
 	// The path to the "application" folder
 	if (is_dir($application_folder))
