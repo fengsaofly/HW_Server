@@ -25,7 +25,7 @@ class QuestionReply extends CI_Controller
 	    $this->load->library('form_validation');
         // $this->load->library('upload');
        
-        $this->load->model('questionReply_model');
+        $this->load->model('questionreply_model');
         $this->load->model('resource_model');
 
         $this->resource_model->setDBName($this->resourceDB);
@@ -121,7 +121,7 @@ class QuestionReply extends CI_Controller
                             //上传资源
                             $resultArray = $this->upload->multiple('qr_resources',$user_id,'questionReply');
                             
-                            
+
                             //上传资源出错
                             if (!empty($resultArray['error'])) {
                                 $status = 3;
@@ -187,7 +187,7 @@ class QuestionReply extends CI_Controller
                         $data['created_time'] = time();
 
 
-                        $newIDs['qr_id'] = $this->questionReply_model->set_questionReply($data);
+                        $newIDs['qr_id'] = $this->questionreply_model->set_questionReply($data);
                         $newIDs['created_time'] = $data['created_time'];
                         // print_r($newIDs);
                         // die();
@@ -283,7 +283,7 @@ class QuestionReply extends CI_Controller
 	// 			}
  //            }
             
- //        	$contentArray = $this->QuestionReply_model->get_QuestionReply_from_friends($dataArray);
+ //        	$contentArray = $this->Questionreply_model->get_QuestionReply_from_friends($dataArray);
         
  //            if($contentArray == null){
             
@@ -357,7 +357,7 @@ class QuestionReply extends CI_Controller
                 }
                 // print_r($data);die();
                 if ($status == 0) {
-                    $contentArray = $this->questionReply_model->get_questionReply($start,$data);
+                    $contentArray = $this->questionreply_model->get_questionReply($start,$data);
                     // print_r($contentArray);
                     // die();
                     $final_result_array = array();
@@ -413,7 +413,7 @@ class QuestionReply extends CI_Controller
             }
           	
             if ($status == 0) {
-                $contentArray = $this->questionReply_model->get_questionReply(0);
+                $contentArray = $this->questionreply_model->get_questionReply(0);
                 // print_r($contentArray);
                 // die();
                 $final_result_array = array();

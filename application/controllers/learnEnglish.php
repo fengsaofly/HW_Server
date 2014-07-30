@@ -25,7 +25,7 @@ class LearnEnglish extends CI_Controller
 	    $this->load->library('form_validation');
         // $this->load->library('upload');
        
-        $this->load->model('learnEnglish_model');
+        $this->load->model('learnenglish_model');
         $this->load->model('resource_model');
 
         //设置资源表
@@ -170,7 +170,7 @@ class LearnEnglish extends CI_Controller
                     }
 
                     $data['created_time'] = time();
-                    $newIDs['l_id'] = $this->learnEnglish_model->set_learnEnglish($data);
+                    $newIDs['l_id'] = $this->learnenglish_model->set_learnEnglish($data);
                     //插入LearnEnglish表出错
                     if ($newIDs['l_id'] <= 0 ) {
                         $status = 6;
@@ -186,8 +186,8 @@ class LearnEnglish extends CI_Controller
         }
 
         $statusArray  = array('status' => $status,'message'=>$message,'newIDs'=> $newIDs);
-        echo json_encode($statusArray);
-        // echo base64_encode(json_encode($statusArray));
+        // echo json_encode($statusArray);
+        echo base64_encode(json_encode($statusArray));
 
        	return true;
 	}
@@ -280,8 +280,8 @@ class LearnEnglish extends CI_Controller
             // print_r($start);die();
 
             if ($status == 0) {
-                    // $ids = $this->LearnEnglish_model->getIDs($start,$data);
-                    $contentArray = $this->learnEnglish_model->get_learnEnglish($start,$data);
+                    // $ids = $this->learnenglish_model->getIDs($start,$data);
+                    $contentArray = $this->learnenglish_model->get_learnEnglish($start,$data);
 
                 // print_r($contentArray);
                 // die();
@@ -300,7 +300,7 @@ class LearnEnglish extends CI_Controller
                    //增加回复总数
                     foreach($contentArray as $index => $row) {
                 
-                        $rowReplySum =  $this->learnEnglish_model->getReplySum($row['id']);
+                        $rowReplySum =  $this->learnenglish_model->getReplySum($row['id']);
                         $contentArray[$index]['replySum'] = $rowReplySum;
                     }
 
@@ -311,8 +311,8 @@ class LearnEnglish extends CI_Controller
             
         }
         $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-        echo json_encode($result);
-        // echo base64_encode(json_encode($result));
+        // echo json_encode($result);
+        echo base64_encode(json_encode($result));
     } 
       //获取所有用户信息
     public function getAll(){
@@ -360,7 +360,7 @@ class LearnEnglish extends CI_Controller
             }
           	
             if ($status == 0) {
-                $contentArray = $this->learnEnglish_model->get_learnEnglish();
+                $contentArray = $this->learnenglish_model->get_learnEnglish();
                 
                 if($contentArray == null){
                 

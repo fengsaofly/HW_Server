@@ -21,7 +21,7 @@ class LearnEnglishReply extends CI_Controller
 	    $this->load->library('form_validation');
         // $this->load->library('upload');
        
-        $this->load->model('learnEnglishReply_model');
+        $this->load->model('learnenglishreply_model');
         // $this->load->model('resource_model');
         // $this->load->controller('storage');
 	}
@@ -95,7 +95,7 @@ class LearnEnglishReply extends CI_Controller
                     else
                     {
                         $data['created_time'] = time();
-                        $newIDs['lr_id'] = $this->learnEnglishReply_model->set_learnEnglishReply($data);
+                        $newIDs['lr_id'] = $this->learnenglishreply_model->set_learnEnglishReply($data);
 
                         // print_r($newIDs);
                         // die();
@@ -260,7 +260,7 @@ class LearnEnglishReply extends CI_Controller
 	// 			}
  //            }
             
- //        	$contentArray = $this->learnEnglishReply_model->get_learnEnglishReply_from_friends($dataArray);
+ //        	$contentArray = $this->learnenglishreply_model->get_learnEnglishReply_from_friends($dataArray);
         
  //            if($contentArray == null){
             
@@ -333,7 +333,7 @@ class LearnEnglishReply extends CI_Controller
                 }
                 // print_r($data);die();
                 if ($status == 0) {
-                    $contentArray = $this->learnEnglishReply_model->get_learnEnglishReply($start,$data);
+                    $contentArray = $this->learnenglishreply_model->get_learnEnglishReply($start,$data);
                     // print_r($contentArray);
                     // die();
                     $final_result_array = array();
@@ -391,7 +391,7 @@ class LearnEnglishReply extends CI_Controller
             }
           	
             if ($status == 0) {
-                $contentArray = $this->learnEnglishReply_model->get_learnEnglishReply(0);
+                $contentArray = $this->learnenglishreply_model->get_learnEnglishReply(0);
                 // print_r($contentArray);
                 // die();
                 $final_result_array = array();

@@ -21,7 +21,7 @@ class StoryReply extends CI_Controller
 	    $this->load->library('form_validation');
         // $this->load->library('upload');
        
-        $this->load->model('storyReply_model');
+        $this->load->model('storyreply_model');
         // $this->load->model('resource_model');
         // $this->load->controller('storage');
 	}
@@ -360,8 +360,8 @@ class StoryReply extends CI_Controller
             }
         }
         $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-        echo json_encode($result);
-        // echo base64_encode(json_encode($result));
+        // echo json_encode($result);
+        echo base64_encode(json_encode($result));
     } 
       //获取所有用户信息
     public function getAll(){

@@ -1,11 +1,11 @@
 <?php
 
-class StoryReply_model extends CI_Model{
+class Storyreply_model extends CI_Model{
 	var $dbName = 'StoryReply';
 	var $primaryKey = 'id';
 	var $resource_db = 'SR_Resource';
 	var $resource_foreign_key = 'sr_resource';
-	
+
 	var $limit = DOWNLOAD_SLOT_SIZE;
 	public function __construct()
 	{

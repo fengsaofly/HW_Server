@@ -1,6 +1,6 @@
 <?php
 
-class LearnEnglish_model extends CI_Model{
+class Learnenglish_model extends CI_Model{
 	var $dbName = 'LearnEnglish';
 	var $primaryKey = 'id';
 	var $resource_db = 'L_Resource';

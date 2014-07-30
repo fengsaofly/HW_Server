@@ -1,6 +1,6 @@
 <?php
 
-class QuestionReply_model extends CI_Model{
+class Questionreply_model extends CI_Model{
 	var $dbName = 'QuestionReply';
 	var $primaryKey = 'id';
 	var $resource_db = 'QR_Resource';
