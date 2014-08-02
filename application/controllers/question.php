@@ -56,7 +56,7 @@ class Question extends CI_Controller
         $message = "add success";
         $data = array();
         $error= array();
-
+        $newIDs = array();
 		if($_POST==null)
         {
             $message = "no request parameters!";
@@ -110,7 +110,7 @@ class Question extends CI_Controller
             }
             //允许上传
             else {
-                $newIDs = array();
+                
                 //上传包含文件
                 if ($_FILES!=null) {
                     # code...
@@ -482,8 +482,8 @@ class Question extends CI_Controller
             
         }
         $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-	  	// echo json_encode($result);
-        echo base64_encode(json_encode($result));
+	  	echo json_encode($result);
+        // echo base64_encode(json_encode($result));
         
        
         
@@ -527,118 +527,7 @@ class Question extends CI_Controller
 
         return TRUE;
     }
- //    function  handleWeliaoUploadFile($owner='user',$upload_name='user_pic'){
 
-	//     $dir_base = $this->domain;     //文件上传根目录
-
-	//     $target_base = '/'.$owner.'/';
-	//     // echo $target_base;
-	//     $errorImg = 'error';
-	//     if(empty($_FILES)) {
-	//         echo "<textarea><img src='{$target_base}error.jpg'/></textarea>";
-	//         exit(0);
-	//     }
- //        // $targetDir = dirname($_FILES['upload_file']['tmp_name']).'/discounts/';
- //  		//为上传文件命名
- //  		// $shop_id = $this->uri->segment(2);
- //  		// print_r('shopid:'.$shop_id);
- //  		// if ($shop_id !=null && is_numeric($shop_id)) {
- //  		// 	$gb_filename = $shop_id;
- //  		// }
- //  		// else{
-	//    		$filename = $_FILES[$upload_name]['name'];
-	//         $gb_filename = iconv('utf-8','gb2312',$filename);    //名字转换成gb2312处理
-	//         $this->cur_picname = $gb_filename;	
- //        //保存上传图片名
- //        // }
- //        //文件不存在才上传
- //        if(!file_exists($dir_base.$gb_filename)) {
- //            $isMoved = false;  //默认上传失败
- //            $MAXIMUM_FILESIZE = 2 * 1024 * 1024;     //文件大小限制    1M = 1 * 1024 * 1024 B;
- //            $rEFileTypes = "/^\.(jpg|jpeg|gif|png){1}$/i"; 
- //            if ($_FILES[$upload_name]['size'] <= $MAXIMUM_FILESIZE && 
- //                preg_match($rEFileTypes, strrchr($gb_filename, '.'))) {  
- //            	$stor = new SaeStorage();
-                
- //            	$isMoved = $stor->upload($dir_base,$target_base.$gb_filename,$_FILES[$upload_name]['tmp_name']);
- //                //$this->resizeIMG($isMoved);
- //            }
- //        }else{
-
- //            $isMoved = true;    //已存在文件设置为上传成功
- //        }
- //        if($isMoved){
- //            // echo "<textarea><img  src={$isMoved} width='128' height='128' title='$gb_filename'/></textarea>";
-
- //        }else {
- //              echo "<textarea><img src='{$dir_base}/{$errorImg}' width='128' height='128'/></textarea>";
- //        }
-
- 
-
-	// }
- //    private function resizeIMG($url)
- //    {
-        
- //        $f = new SaeFetchurl();
- //    	$img_data = $f->fetch($url);
- //        $img = new SaeImage();
- //        $img->setData( $img_data );
- //        $img->resize(600); // 等比缩放到200宽
- //        //   $img->flipH(); // 水平翻转
- //        //$img->flipV(); // 垂直翻转
- //        $new_data = $img->exec(); // 执行处理并返回处理后的二进制数据
- //        //  $img->exec( 'jpg' , true );
-        
- //        //图片处理失败时输出错误码和错误信息
- //        if ($new_data === false)
- //              var_dump($img->errno(), $img->errmsg());
- //        else
- //            return   $new_data;
-      
- //    }
- //    public function renameUploadFile($targetName,$sourceName,$dbName,$userid){
-
-	// 	$domain = $this->domain;
-		
-	
-		
- //        	//为文件增加后缀名
-	// 	$pos = strripos($sourceName,'.'); 
-	// 	$fileType = substr($sourceName,$pos);
-		
-	// 	$targetName =  $targetName.$fileType;
-        
- //        $targetUrl = $this->base_dir.'/'.$userid.'/'.$targetName;
-	// 	$stor = new SaeStorage();
-        
- //        $sourceUrl = '/'.$this->base_dir.'/'.$sourceName;
- //        $idTag = 'question_id';	
- //        $picTag = 'question_img';
-   
-		
-	// 	$content = $stor->read( $domain , $sourceUrl) ;
-        
- //        $imgUrl =  $stor->getUrl($domain ,  $sourceUrl);
- //        //进行缩放图片内容的读取
- //        $content = $this->resizeIMG($imgUrl);
-	// 	if (!$content) {
-	// 		die('获取源文件数据失败！');
-	// 	}
-        
-	// 	if($result = $stor->write($domain,$targetUrl,$content))
-	// 	{
- //            $this->final_img_url =  $result ;
-	// 		$data  = array($picTag => $result );
-	// 		$stor->delete($domain,$sourceUrl);
-	// 		$this->db->where($idTag, $userid);
-	// 		$this->db->update($dbName, $data);
-	// 	}
-	// 	else
- //         	var_dump($stor->errno(), $stor->errmsg());
- 		
-         
-	// }
 
 }
 

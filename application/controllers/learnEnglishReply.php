@@ -12,7 +12,8 @@ class LearnEnglishReply extends CI_Controller
     var $cur_picname = '';
     var $db_name = 'LearnEnglishReply';
     var $final_img_url = '';
-    var $mustPostNums = 3;
+    var $mustPostNums = 1;
+    var $resourceDB = 'LR_Resource';
     function __construct() {
         parent::__construct();
   
@@ -22,8 +23,10 @@ class LearnEnglishReply extends CI_Controller
         // $this->load->library('upload');
        
         $this->load->model('learnenglishreply_model');
-        // $this->load->model('resource_model');
+        $this->load->model('resource_model');
         // $this->load->controller('storage');
+
+        $this->resource_model->setDBName($this->resourceDB);
 	}
 
 	public function index($page = 1) {
@@ -64,19 +67,19 @@ class LearnEnglishReply extends CI_Controller
                 foreach($_POST as $index => $value) {
 
             
-                    if ($index=='lr_text') {
-                        # code...
-                        $data['lr_text'] = $value;
-                        $postNums++;
-                    }
-                    elseif($index=='lr_user'){
+                    // if ($index=='lr_text') {
+                    //     # code...
+                    //     $data['lr_text'] = $value;
+                    //     $postNums++;
+                    // }
+                    if($index=='lr_user'){
                         $data['lr_user'] = $value;
                         $postNums++;
                     }
-                    elseif($index=='lr_type'){
-                        $data['lr_type'] = $value;
-                        $postNums++;
-                    }
+                    // elseif($index=='lr_type'){
+                    //     $data['lr_type'] = $value;
+                    //     $postNums++;
+                    // }
                     else{
                         $message = "some parameters are not expected !";
                         $status = 3;
@@ -87,112 +90,98 @@ class LearnEnglishReply extends CI_Controller
                 //上传没错
                 if($status==0){
                     //上传参数太少
-              		if ($postNums < $this->mustPostNums) {
+                    if ($postNums < $this->mustPostNums) {
                         $status = 4;
                         $message = 'parameter number is not enough';
 
                     }
+                    elseif ($_FILES == null) {
+                        $status = 5;
+                        $message = 'not post record file';
+                    }
                     else
                     {
-                        $data['created_time'] = time();
-                        $newIDs['lr_id'] = $this->learnenglishreply_model->set_learnEnglishReply($data);
+             
+                            
+                        //载入配置信息
+                        $config['upload_path'] = STORAGE_BASE_URL;
+                        $config['allowed_types'] = 'gif|jpg|png|jpeg|amr';
+                        $config['max_size'] = '5000';
+                        $config['max_width'] = '5000';
+                        $config['max_height'] = '4000';
+                        
+                        $this->load->library('upload', $config);
+                       
+                        $user_id = $data['lr_user'] ;
 
-                        // print_r($newIDs);
-                        // die();
+                        // print_r($_FILES);die();
+                        //上传资源
+                        $resultArray = $this->upload->multiple('lr_resources',$user_id,'storyReply');
+                        
 
-                        //插入数据库出错
-                        if ($newIDs['lr_id'] <= 0 ) {
-                            $status = 5;
-                            $message = 'insert a new learnEnglishReply failed';
+                        //上传资源出错
+                        if (!empty($resultArray['error'])) {
+                            $status = 7;
+                            $message = 'upload resource failed';
                         }
+                        //上传成功,创建缩略图，保存到数据库
+                        else{
+                             //载入图片压缩配置信息
+                            $this->initialImageResize();
+                            // print_r($resultArray);die();
+                            // 获取已上传图片真实路径
+                            $images = array('resource_lpath' => array(),'resource_spath' => array());
+                            
+
+                            foreach ($resultArray['real_path'] as $key => $value) {
+
+                                array_push( $images['resource_spath'] , '' );
+                                //保存原始资源
+                                array_push($images['resource_lpath'], $resultArray['final_path'][$key]);
+
+                            }
+
+                            // print_r($images);die();
+                            //将资源信息存入资源表
+                            $resource_id = $this->resource_model->get_next_id();
+                            for( $i = 0 ; $i < count($images['resource_spath']) ; $i++ ) {
+
+                                $resource  = array('resource_spath' => $images['resource_spath'][$i] ,
+                                                         'resource_lpath' => $images['resource_lpath'][$i] ,
+                                                                'resource_id' => $resource_id);
+
+                                $this->resource_model->set_resource($resource);
+                            }
+                            //将问题信息存入storyReply表
+                            $data['lr_resource'] = $resource_id;
+                            $newIDs['resource_id'] = $resource_id;
+                            $data['created_time'] = time();
+                            $newIDs['lr_id'] = $this->learnenglishreply_model->set_learnEnglishReply($data);
+                            $newIDs['created_time'] = $data['created_time'];
+                            // print_r($newIDs);
+                            // die();
+                            //插入QuestionReply表出错
+                            if ($newIDs['lr_id'] <= 0 ) {
+                                $status = 8;
+                                $message = 'insert a new QuestionReply failed';
+                            }
+                        }
+                    
                   
                     }
-                    // $data['qr_resource'] = 0;
-                    //允许上传
-                    //上传包含的文件
-                    // if ($_FILES!=null) {
-                    //     //载入配置信息
-                    //     $config['upload_path'] = STORAGE_BASE_URL;
-                    //     $config['allowed_types'] = 'gif|jpg|png|jpeg|amr';
-                    //     $config['max_size'] = '5000';
-                    //     $config['max_width'] = '5000';
-                    //     $config['max_height'] = '4000';
-                        
-                    //     $this->load->library('upload', $config);
-                       
-                    //     $user_id = $data['qr_user'] ;
-
-                    //     // print_r($_FILES);die();
-                    //     //上传资源
-                    //     $resultArray = $this->upload->multiple('qr_resources',$user_id,'learnEnglishReply');
-                        
-
-                    //     //上传资源出错
-                    //     if (!empty($resultArray['error'])) {
-                    //         $status = 3;
-                    //         $message = 'upload resource failed';
-                    //     }
-                    //     //上传成功,创建缩略图，保存到数据库
-                    //     else{
-                    //          //载入图片压缩配置信息
-                    //         $this->initialImageResize();
-                    //         // print_r($resultArray);die();
-                    //         // 获取已上传图片真实路径
-                    //         $images = array('resource_lpath' => array(),'resource_spath' => array());
-                            
-                    //         // 保存资源信息到images，所有图片进行缩放处理
-                    //         // print_r($_FILES);
-                    //         // print_r($resultArray);die();
-                    //         foreach ($resultArray['real_path'] as $key => $value) {
-
-                    //             //获取文件类型：image or audio
-                    //             $pos = strripos($value,'.'); 
-                    //             $fileType = substr($value,$pos+1);
-                    //             //只处理图片
-                    //             if ($fileType != 'amr') {
-                    //                 if ($error = $this->resizeIMG($value)) {
-                    //                     array_push($errors, $error);
-                    //                 }
-                            
-                    //                 //保存缩略图 spath
-                    //                 array_push( $images['resource_spath'] , $this->getThumbPath($resultArray['final_path'][$key]) );
-                                    
-                    //             }
-                    //             //如果是音频，不保存spath
-                    //             else
-                    //                 array_push( $images['resource_spath'] , '' );
-
-                    //             //保存原始资源
-                    //             array_push($images['resource_lpath'], $resultArray['final_path'][$key]);
-                          
-
-                                
-                    //         }
-
-                    //         // print_r($images);die();
-                    //         //将资源信息存入资源表
-                    //         $resource_id = $this->resource_model->get_next_id();
-                    //         for( $i = 0 ; $i < count($images['resource_spath']) ; $i++ ) {
-
-                    //             $resource  = array('resource_spath' => $images['resource_spath'][$i] ,
-                    //                                      'resource_lpath' => $images['resource_lpath'][$i] ,
-                    //                                             'resource_id' => $resource_id);
-
-                    //             $this->resource_model->set_resource($resource);
-                    //         }
-                    //         //将问题信息存入learnEnglishReply表
-                    //         $data['qr_resource'] = $resource_id;
-                    //         $newIDs['resource_id'] = $resource_id;
-                    //     }
+               
                 }
             }
         }
-
+        // $newIDs['created_time'] = $data['created_time'];
+        
         $statusArray  = array('status' => $status,'message'=>$message,'newIDs'=> $newIDs);
         // echo json_encode($statusArray);
         echo base64_encode(json_encode($statusArray));
 
-       	return true;
+        return true;
+
+
 	}
     /**
     * @param image    图片url
@@ -358,8 +347,8 @@ class LearnEnglishReply extends CI_Controller
             }
         }
         $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-        echo json_encode($result);
-        // echo base64_encode(json_encode($result));
+        // echo json_encode($result);
+        echo base64_encode(json_encode($result));
     } 
       //获取所有用户信息
     public function getAll(){

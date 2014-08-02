@@ -12,7 +12,7 @@ class StoryReply extends CI_Controller
     var $cur_picname = '';
     var $db_name = 'StoryReply';
     var $final_img_url = '';
-    var $mustPostNums = 3;
+    var $mustPostNums = 2;
     function __construct() {
         parent::__construct();
   
@@ -63,11 +63,7 @@ class StoryReply extends CI_Controller
                 //获取post参数
                 foreach($_POST as $index => $value) {
 
-                    if ($index=='sr_title') {
-                        $data['sr_title']= $value;
-                        $postNums++;
-                    }
-                    elseif ($index=='sr_text') {
+                    if ($index=='sr_text') {
                         # code...
                         $data['sr_text'] = $value;
                         $postNums++;
@@ -76,9 +72,7 @@ class StoryReply extends CI_Controller
                         $data['sr_user'] = $value;
                         $postNums++;
                     }
-                    elseif($index=='sr_type'){
-                        $data['sr_type'] = $value;
-                    }
+
                     else{
                         $message = "some parameters are not expected !";
                         $status = 3;
@@ -97,7 +91,7 @@ class StoryReply extends CI_Controller
                     else
                     {
                         $data['created_time'] = time();
-                        $newIDs['sr_id'] = $this->storyReply_model->set_storyReply($data);
+                        $newIDs['sr_id'] = $this->storyreply_model->set_storyReply($data);
 
                         // print_r($newIDs);
                         // die();
@@ -189,7 +183,8 @@ class StoryReply extends CI_Controller
                 }
             }
         }
-
+        $newIDs['created_time'] = $data['created_time'];
+        
         $statusArray  = array('status' => $status,'message'=>$message,'newIDs'=> $newIDs);
         // echo json_encode($statusArray);
         echo base64_encode(json_encode($statusArray));
@@ -262,7 +257,7 @@ class StoryReply extends CI_Controller
 	// 			}
  //            }
             
- //        	$contentArray = $this->storyReply_model->get_storyReply_from_friends($dataArray);
+ //        	$contentArray = $this->storyreply_model->get_storyReply_from_friends($dataArray);
         
  //            if($contentArray == null){
             
@@ -335,7 +330,7 @@ class StoryReply extends CI_Controller
                 }
                 // print_r($data);die();
                 if ($status == 0) {
-                    $contentArray = $this->storyReply_model->get_storyReply($start,$data);
+                    $contentArray = $this->storyreply_model->get_storyReply($start,$data);
                     // print_r($contentArray);
                     // die();
                     $final_result_array = array();
@@ -348,6 +343,8 @@ class StoryReply extends CI_Controller
                     //有内容
                     else{
                        // $contentArray = $this->mergeSearchResult($contentArray);
+
+
                        $contentArray = array_values($contentArray);
                             
                     
@@ -393,7 +390,7 @@ class StoryReply extends CI_Controller
             }
           	
             if ($status == 0) {
-                $contentArray = $this->storyReply_model->get_storyReply(0);
+                $contentArray = $this->storyreply_model->get_storyReply(0);
                 // print_r($contentArray);
                 // die();
                 $final_result_array = array();

@@ -1,5 +1,6 @@
 <?php
 
+
 class Story_model extends CI_Model{
 	var $dbName = 'Story';
 	var $primaryKey = 'id';

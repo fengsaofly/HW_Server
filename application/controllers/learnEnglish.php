@@ -96,80 +96,83 @@ class LearnEnglish extends CI_Controller
                     $message = 'parameter number is not enough';
                 }
                 //没有上传资源
-                elseif ($_FILES == null) {
-                    $status = 4;
-                    $message = 'no post record file';
-                }
+                // elseif ($_FILES == null) {
+                //     $status = 4;
+                //     $message = 'no post record file';
+                // }
                 //上传包含文件    
                 else   
                 {
+                    if ($_FILES != null) {
 
-                    //载入配置信息
-                    $config['upload_path'] = STORAGE_BASE_URL;
-                    $config['allowed_types'] = 'gif|jpg|png|jpeg|amr';
-                    $config['max_size'] = '5000';
-                    $config['max_width'] = '5000';
-                    $config['max_height'] = '4000';
-                    
-                    $this->load->library('upload', $config);
-                   
-                    $user_id = $data['l_user'] ;
-                    //上传资源
-                    $resultArray = $this->upload->multiple('l_resources',$user_id,'learnEnglish');
-
-
-                    //上传资源出错
-                    if (!empty($resultArray['error'])) {
-                        $status = 5;
-                        $message = 'upload resource failed';
-                    }
-                    //上传成功,创建缩略图，保存到数据库
-                    else{
-
-                        $images = array('resource_lpath' => array(),'resource_spath' => array());
+                        //载入配置信息
+                        $config['upload_path'] = STORAGE_BASE_URL;
+                        $config['allowed_types'] = 'gif|jpg|png|jpeg|amr';
+                        $config['max_size'] = '5000';
+                        $config['max_width'] = '5000';
+                        $config['max_height'] = '4000';
                         
-                        // 保存资源信息到images，所有图片进行缩放处理
-                        foreach ($resultArray['real_path'] as $key => $value) {
+                        $this->load->library('upload', $config);
+                       
+                        $user_id = $data['l_user'] ;
+                        //上传资源
+                        $resultArray = $this->upload->multiple('l_resources',$user_id,'learnEnglish');
 
-                            //获取文件类型：image or audio
-                            $pos = strripos($value,'.'); 
-                            $fileType = substr($value,$pos+1);
-                            //只处理图片
-                            if ($fileType != 'amr') {
-                                $errors[$key] = $this->resizeIMG($value);
-                        
-                                //保存缩略图 spath
-                                array_push( $images['resource_spath'] , $this->getThumbPath($resultArray['final_path'][$key]) );
+
+                        //上传资源出错
+                        if (!empty($resultArray['error'])) {
+                            $status = 5;
+                            $message = 'upload resource failed';
+                        }
+                        //上传成功,创建缩略图，保存到数据库
+                        else{
+
+                            $images = array('resource_lpath' => array(),'resource_spath' => array());
+                            
+                            // 保存资源信息到images，所有图片进行缩放处理
+                            foreach ($resultArray['real_path'] as $key => $value) {
+
+                                //获取文件类型：image or audio
+                                $pos = strripos($value,'.'); 
+                                $fileType = substr($value,$pos+1);
+                                //只处理图片
+                                if ($fileType != 'amr') {
+                                    $errors[$key] = $this->resizeIMG($value);
+                            
+                                    //保存缩略图 spath
+                                    array_push( $images['resource_spath'] , $this->getThumbPath($resultArray['final_path'][$key]) );
+                                    
+                                }
+                                //如果是音频，不保存spath
+                                else
+                                    array_push( $images['resource_spath'] , '' );
+
+                                //保存原始资源
+                                array_push($images['resource_lpath'], $resultArray['final_path'][$key]);
+                          
+
                                 
                             }
-                            //如果是音频，不保存spath
-                            else
-                                array_push( $images['resource_spath'] , '' );
 
-                            //保存原始资源
-                            array_push($images['resource_lpath'], $resultArray['final_path'][$key]);
-                      
+                            // print_r($images);die();
+                            //将资源信息存入资源表
+                            $resource_id = $this->resource_model->get_next_id();
+                            for( $i = 0 ; $i < count($images['resource_spath']) ; $i++ ) {
 
-                            
+                                $resource  = array('resource_spath' => $images['resource_spath'][$i] ,
+                                                         'resource_lpath' => $images['resource_lpath'][$i] ,
+                                                                'resource_id' => $resource_id);
+
+                                $this->resource_model->set_resource($resource);
+                            }
+                            //将问题信息存入LearnEnglish表
+                            $data['l_resource'] = $resource_id;
+                            $newIDs['resource_id'] = $resource_id;
                         }
-
-                        // print_r($images);die();
-                        //将资源信息存入资源表
-                        $resource_id = $this->resource_model->get_next_id();
-                        for( $i = 0 ; $i < count($images['resource_spath']) ; $i++ ) {
-
-                            $resource  = array('resource_spath' => $images['resource_spath'][$i] ,
-                                                     'resource_lpath' => $images['resource_lpath'][$i] ,
-                                                            'resource_id' => $resource_id);
-
-                            $this->resource_model->set_resource($resource);
-                        }
-                        //将问题信息存入LearnEnglish表
-                        $data['l_resource'] = $resource_id;
-                        $newIDs['resource_id'] = $resource_id;
                     }
 
                     $data['created_time'] = time();
+                    $newIDs['created_time'] = $data['created_time'];
                     $newIDs['l_id'] = $this->learnenglish_model->set_learnEnglish($data);
                     //插入LearnEnglish表出错
                     if ($newIDs['l_id'] <= 0 ) {

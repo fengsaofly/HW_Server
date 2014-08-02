@@ -80,7 +80,9 @@ class Question_model extends CI_Model{
 		}
 		$this->db->select('count(*) as sum');
 		$this->db->from($this->reply_db);
-		$this->db->where($this->reply_foreign_key,$id,$this->type,0);
+
+		$this->db->where($this->reply_foreign_key,$id);
+		$this->db->where($this->type,0);
 
 		$query = $this->db->get();
 		$row = $query->row_array();

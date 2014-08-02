@@ -6,10 +6,6 @@
 class Story extends CI_Controller
 {
 	var $ak = '7244d82a2ef54bfa015a0d7d6f85f372';
-	
-    
-
-	 // var $perpage = 5;
 
     var $base_dir = 'Story';
     var $cur_picname = '';
@@ -32,9 +28,7 @@ class Story extends CI_Controller
         // $this->load->controller('storage');
 	}
 
-	public function index($page = 1) {
-
-	}
+	public function index($page = 1) {}
     //添加破题信息
 	function add() {
         $status = 0;
@@ -42,13 +36,7 @@ class Story extends CI_Controller
         $message = "add success";
         $data = array();
         $newIDs = array();
-        // $resultArray=array();
 
-        // print_r($_SERVER);
-        // die();
-
-        // print_r($this->resource_model->get_next_id());
-        // die();
 		if($_POST==null)
         {
             $message = "no request parameters!";
@@ -323,70 +311,6 @@ class Story extends CI_Controller
         // echo json_encode($result);
         echo base64_encode(json_encode($result));
     } 
-      //获取所有用户信息
-    public function getAll(){
-        $status = 0;
-        $message = 'access is successful!';
-        $contentArray = null;
-        $include_friends = false;
-        $dataArray = array();
-        
-        if($_GET==null){
-        
-            $status = 1;
-            $message = '未包含指定参数';
-            
-        }
-        else
-        {
-             foreach($_GET as $index => $value) {
-                if ($index=='ak') {
-                    # code...
-                    if ( $this->ak!=$value) {
-                        # code...
-                        $message = "ak is error!";
-                        $status = 1;
-                        $success = false;
-                        break;
-                    }
-                }
-    //             elseif($index=='Story_friends'){
-    //                 $include_friends = true;
-    //                 //echo 'include_friends';
-    //             	$dataArray = json_decode($value,true);
-    //                 if($dataArray == null){
-    //         			$message = "Story_friends decode result is null";
-    //            	 		$status = 3;
-                
-    //         		}
-    //             }
-    //             else{
-    //                 $message = "some parameters are not expected !";
-    //                 $status = 2;
-    //                 $success = false;
-    //                 break;
-				// }
-            }
-          	
-            if ($status == 0) {
-                $contentArray = $this->Story_model->get_Story();
-                
-                if($contentArray == null){
-                
-                    $status = 2;
-                    $message = 'no Storys you can get';
-                }
-            }
-        	
-            
-        }
-        $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-	  	// echo json_encode($result);
-        echo base64_encode(json_encode($result));
-        
-       
-        
-    }
 
 }
 

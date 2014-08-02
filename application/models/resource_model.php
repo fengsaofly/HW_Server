@@ -2,7 +2,7 @@
 
 class Resource_model extends CI_Model{
 	var $dbName = 'Resource';
-	// var $current_id = 0;
+	var $primaryKey = 'resource_id';
 	public function __construct()
 	{
 		$this->load->database();
@@ -20,10 +20,26 @@ class Resource_model extends CI_Model{
         $result = $this->db->insert($this->dbName,$resource);
         
 	}
+	public function delete($files)
+	{
+		foreach ($files as $key => $value) {
+			unlink($value);
+		}
+		
+	}
+	public function update_resource($r_id = FALSE,$params = FALSE)
+	{
+		if (!$r_id || !$params) {
+			return null;
+		}
+		// $data = array_splice($_POST,4,1); 
+		$this->db->where($this->primaryKey, $r_id);
+		$this->db->update($this->dbName, $params);
+	}
 	public function get_next_id()
 	{
 	   // $query = $this->db->query("select MAX(resource_id) as maxid from ".$this->dbName);
-	   $this->db->select_max('resource_id', 'maxid');
+	   $this->db->select_max($this->primaryKey, 'maxid');
 	   $query = $this->db->get($this->dbName);
 	   // $row = $query->first_row('array');
 	   // $maxId = $row['resource_id'];
