@@ -20,7 +20,7 @@ class StoryReply extends CI_Controller
         $this->load->helper('form');
 	    $this->load->library('form_validation');
         // $this->load->library('upload');
-       
+       $this->load->model('user_model');
         $this->load->model('storyreply_model');
         // $this->load->model('resource_model');
         // $this->load->controller('storage');
@@ -219,58 +219,8 @@ class StoryReply extends CI_Controller
 
 
     }
- //    //获取指定用户信息
- //    public function view($user_identifier=false){
- //        $status = 0;
- //        $message = 'access is successful!';
- //        $contentArray = null;
- //        $dataArray = array();
- //        if($user_identifier==false){
-        
-            
- //            $status = 1;
- //            $message = '未指定用户id';
-            
-            
- //        }
- //        else
- //        {
- //            foreach($_POST as $index => $value) {
- //                if ($index=='ak') {
- //                    # code...
- //                    if ( $this->ak!=$value) {
- //                        # code...
- //                        $message = "ak is error!";
- //                        $status = 1;
- //                        $success = false;
- //                        break;
- //                    }
- //                }
- //                elseif($index=='storyReply_friends'){
- //                	$dataArray = json_decode($value,true);
- //                }
- //                else{
- //                    $message = "some parameters are not expected !";
- //                    $status = 2;
- //                    $success = false;
- //                    break;
-	// 			}
- //            }
-            
- //        	$contentArray = $this->storyreply_model->get_storyReply_from_friends($dataArray);
-        
- //            if($contentArray == null){
-            
- //                $status = 2;
- //                $message = '指定的用户不存在';
- //            }
-            
- //        }
- //        $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-	//   	echo json_encode($result);
-       
-        
- //    }
+
+
     public function get($sr_s=false){
         $status = 0;
         $message = 'access is successful!';
@@ -345,8 +295,14 @@ class StoryReply extends CI_Controller
                        // $contentArray = $this->mergeSearchResult($contentArray);
 
 
-                       $contentArray = array_values($contentArray);
-                            
+                        $contentArray = array_values($contentArray);
+                        foreach($contentArray as $index => $row) {
+     
+                            //添加用户头像
+                            $avatar = $this->user_model->get_thumbIcon($row['sr_user']);
+                            $contentArray[$index]['avatar_thumb_path'] = $avatar;
+                       
+                    }     
                     
 
                     }

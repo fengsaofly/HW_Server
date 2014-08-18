@@ -27,7 +27,7 @@ class QuestionReply extends CI_Controller
        
         $this->load->model('questionreply_model');
         $this->load->model('resource_model');
-
+        $this->load->model('user_model');
         $this->resource_model->setDBName($this->resourceDB);
         // $this->load->controller('storage');
 	}
@@ -81,7 +81,14 @@ class QuestionReply extends CI_Controller
                         $data['qr_user'] = $value;
                         $postNums++;
                     }
-
+                    elseif($index=='lon'){
+                        $data['lon'] = $value;
+                        $postNums++;
+                    }
+                    elseif($index=='lat'){
+                        $data['lat'] = $value;
+                        $postNums++;
+                    }
         			else{
         				$message = "some parameters are not expected !";
         				$status = 3;
@@ -245,65 +252,14 @@ class QuestionReply extends CI_Controller
 
 
     }
- //    //获取指定用户信息
- //    public function view($user_identifier=false){
- //        $status = 0;
- //        $message = 'access is successful!';
- //        $contentArray = null;
- //        $dataArray = array();
- //        if($user_identifier==false){
-        
-            
- //            $status = 1;
- //            $message = '未指定用户id';
-            
-            
- //        }
- //        else
- //        {
- //            foreach($_POST as $index => $value) {
- //                if ($index=='ak') {
- //                    # code...
- //                    if ( $this->ak!=$value) {
- //                        # code...
- //                        $message = "ak is error!";
- //                        $status = 1;
- //                        $success = false;
- //                        break;
- //                    }
- //                }
- //                elseif($index=='QuestionReply_friends'){
- //                	$dataArray = json_decode($value,true);
- //                }
- //                else{
- //                    $message = "some parameters are not expected !";
- //                    $status = 2;
- //                    $success = false;
- //                    break;
-	// 			}
- //            }
-            
- //        	$contentArray = $this->Questionreply_model->get_QuestionReply_from_friends($dataArray);
-        
- //            if($contentArray == null){
-            
- //                $status = 2;
- //                $message = '指定的用户不存在';
- //            }
-            
- //        }
- //        $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-	//   	echo json_encode($result);
-       
-        
- //    }
+
     public function get($qr_q=false){
         $status = 0;
         $message = 'access is successful!';
         $contentArray = null;
         $include_friends = false;
         $data = array();
-        
+        $start = 0;
         if (!$qr_q) {
             $status = 1;
             $message = 'no specify qid';
@@ -354,6 +310,7 @@ class QuestionReply extends CI_Controller
                          
                     }
 
+
                 }
                 // print_r($data);die();
                 if ($status == 0) {
@@ -368,8 +325,15 @@ class QuestionReply extends CI_Controller
                     }
                     //有破题内容
                     else{
-                       $contentArray = $this->mergeSearchResult($contentArray);
-                       $contentArray = array_values($contentArray);
+
+                        $contentArray = $this->mergeSearchResult($contentArray);
+                        $contentArray = array_values($contentArray);
+                        foreach ($contentArray as $index => $row) {
+                            //添加用户头像
+                            $avatar = $this->user_model->get_thumbIcon($row['qr_user']);
+                            $contentArray[$index]['avatar_thumb_path'] = $avatar;
+                        }
+                        
                         // die();
                         // $contentArray  = $final_result_array;
                     }
@@ -383,6 +347,68 @@ class QuestionReply extends CI_Controller
         // echo json_encode($result);
         echo base64_encode(json_encode($result));
     } 
+     /*更新操作 更新问题状态：增加点赞数*/
+    public function update($id=FALSE)
+    {
+        $status = 0;
+        $message = 'access is successful!';
+        $contentArray = null;
+        $include_friends = false;
+        $data = array();
+
+        if (!$id) {
+            $status = 1;
+            $message = 'no specify id';
+        }
+
+        else
+        {
+            $exist = $this->questionreply_model->getIDs(0, array('id' => $id ));
+
+            if ($exist != null && count($exist) > 0 ) {
+                // foreach($_POST as $index => $value) {
+                //     if ($index=='q_state') {
+                //         # code...
+                //         $data['q_state'] = $value;
+                //             // $postNums++;
+                //         }
+                //     else{
+                //         $message = "some parameters are not expected !";
+                //         $status = 2;
+                //         $success = false;
+                //         break;
+                //     }
+                // }
+                $data = $_POST;
+
+                if ($status == 0) {
+                    $contentArray = $this->questionreply_model->update_questionReply($id);//参数0--表示start从0开始算，返回limit个结果
+                    
+                    if($contentArray != 1){
+                    
+                        $status = 2;
+                        $message = 'can not update database' ;
+                    }
+
+                  
+                }
+            }
+            else
+            {
+                $status = 6;
+                $message = 'id is not exist';
+            }
+
+         
+            
+            
+        }
+        $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
+        // echo json_encode($result);
+        echo base64_encode(json_encode($result));
+        
+    }
+
       //获取所有用户信息
     public function getAll(){
         $status = 0;
@@ -479,8 +505,9 @@ class QuestionReply extends CI_Controller
         $this->resizeConfig['source_image'] = './upload';
         $this->resizeConfig['create_thumb'] = TRUE;
         $this->resizeConfig['maintain_ratio'] = TRUE;
-        $this->resizeConfig['width'] = 120;
-        $this->resizeConfig['height'] = 120; 
+        $this->resizeConfig['width'] = 480;
+        $this->resizeConfig['height'] = 320; 
+
 
         $this->load->library('image_lib', $this->resizeConfig); 
     }

@@ -1,5 +1,5 @@
 <?php
-// require APPPATH.'/libraries/HttpClient.class.php';
+// require getcwd().'/application/libraries/Utils.php';
 /**
 *  
 */
@@ -15,7 +15,7 @@ class Question extends CI_Controller
     var $cur_picname = '';
     var $db_name = 'question';
     var $final_img_url = '';
-    var $mustPostNums = 5;
+    var $mustPostNums = 4;
     var $resourceDB = 'Q_Resource';
     var $resizeConfig = array();
     function __construct() {
@@ -28,25 +28,71 @@ class Question extends CI_Controller
        
         $this->load->model('question_model');
         $this->load->model('resource_model');
-
+        $this->load->model('user_model');
         $this->resource_model->setDBName($this->resourceDB);
+
+        $this->load->library('Utilsclass');
+        
+        //******************** 配置信息 ********************************
+
+
+
+
+        // $params['smtp_port'];// $smtp_port;
+
+        // $params['relay_host'];// $relay_host;
+
+        // $this->time_out = 30; //is used in fsockopen() 
+        $params = array();
+
+        $params['server'] = "smtp.126.com";//SMTP服务器
+
+        $params['auth'] = true; //auth
+
+        $params['user'] = '15680935639@163.com'; //SMTP服务器的用户帐号
+
+        $params['pass'] = "xyf010294214"; //SMTP服务器的用户密码
+
+        $this->load->library('Emailclass',$params);
+
+        
         // $this->load->controller('storage');
 	}
 
 	public function index($page = 1) {
 
+        // $this->mail->SMTPDebug  = 1;
 
-      
+        $this->load->library('Mailer');
+        $mail_body =   '<div style="padding:72px 100px">
+                <div style="height:71px;background:#51a0e3;"><img src="../../images/cq_logo.png" title="破题高手安全设置提醒"></div>
+                <div style="padding:37px 0 81px 0;border:1px solid #e7e7e7;font-size:14px;color:#6e6e6e;background:#FFF;">
+                    <div style="padding:0 0 10px 41px;font-weight:bold;color:#6e6e6e;">亲爱的破题高手用户：</div>
+                    <div style="padding:0 0 26px 41px;color:#6e6e6e;">您的帐号 <span style="color:#efa229;font-weight:bold;"><a style="color:#efa229;text-decoration:none;cursor:text;">Flyln</a></span> 请求找回密码，操作已成功！</div>
+  
+                    <div style="padding:0 0 26px 41px;">您的密码已被重置为:<span style="color:#efa229;font-weight:bold;"><a style="color:#333333;text-decoration:none;cursor:text;"> 123456</a></span>                             
+                    </div>
+                    <div style="padding:0 0 26px 41px;color:#6e6e6e;">
+                        <div style="padding-bottom:8px;">破题高手</div>
+                        <div><span style="border-bottom:1px dashed #ccc;" t="5" times="">2014-07-25</span></div>
+                    </div>
+                    <div style="padding:0 0 26px 41px;color:#6e6e6e;font-size:12px;">
+                        本电子邮件地址不能接受回复邮件。有关详情，请访问 <a href="http://help.163.com/special/sp/urs_index.html" target="_blank" style="color:#3058a8;">破题高手帮助中心</a>。
+                    </div>
+                </div>
+                <div style="width:700px;height:129px;padding-top:20px;overflow:hidden;">
+                    <a href="http://reg.163.com/yixin/caipiaoact.do#from=ursgnzyyc" target="_blank" style="border:none;"><img src="http://reg.163.com/images/secmail/adv.png" title="关注通行证公众号，帐号安全实时提醒。现在还有3元红包免费领！" style="border: none; display: none !important; visibility: hidden !important; opacity: 0 !important; background-position: 0px 0px;" width="0" height="0"></a>
+                </div>
+                <div style="padding-top:24px;text-align:right;color:#999;"><span style="border-bottom:1px dashed #ccc;" t="5" times="">2014-07-25</span>(本邮件由系统自动发出，请勿回复)</div>
+            </div>';
 
-        $to = "350043263@qq.com";
-        $subject = "Test mail";
-        $message = "Hello! This is a simple email message. your HandWrite account code is : 123456";
-        $from = "123456@qq.com";
-        $headers = "From: $from";
-        mail($to,$subject,$message,$headers);
-        echo "Mail Sent.";
-
-     
+        $this->mailer->sendmail(
+            '350043263@qq.com',
+            '肖逸飞',
+            '密码找回 '.date('Y-m-d H:i:s'),
+            $mail_body
+        );
+    
   
 	}
     //添加破题信息
@@ -69,11 +115,11 @@ class Question extends CI_Controller
             $postNums=0;//必须post参数个数
             // $resIndex=0;
             foreach($_POST as $index => $value) {
-    		    if ($index=='q_title') {
-                    $data['q_title']= $value;
-                    $postNums++;
-                }
-                elseif ($index=='q_text_content') {
+    		    // if ($index=='q_title') {
+          //           $data['q_title']= $value;
+          //           $postNums++;
+          //       }
+                if ($index=='q_text_content') {
     				# code...
     				$data['q_text_content'] = $value;
                     $postNums++;
@@ -90,6 +136,14 @@ class Question extends CI_Controller
                     $data['q_user'] = $value;
                     $postNums++;
                 }
+                elseif($index=='lon'){
+                    $data['lon'] = $value;
+                    $postNums++;
+                }
+                elseif($index=='lat'){
+                    $data['lat'] = $value;
+                    $postNums++;
+                }
     			else{
     				$message = "some parameters are not expected !";
     				$status = 2;
@@ -104,7 +158,7 @@ class Question extends CI_Controller
                 // echo json_encode($statusArray);
                 // return false;
             }
-      		elseif ($postNums!=$this->mustPostNums) {
+      		elseif ($postNums < $this->mustPostNums) {
                 $status = 3;
                 $message = 'parameter number is not enough';
             }
@@ -265,59 +319,10 @@ class Question extends CI_Controller
 
 
     }
- //    //获取指定用户信息
- //    public function view($user_identifier=false){
- //        $status = 0;
- //        $message = 'access is successful!';
- //        $contentArray = null;
- //        $dataArray = array();
- //        if($user_identifier==false){
-        
-            
- //            $status = 1;
- //            $message = '未指定用户id';
-            
-            
- //        }
- //        else
- //        {
- //            foreach($_POST as $index => $value) {
- //                if ($index=='ak') {
- //                    # code...
- //                    if ( $this->ak!=$value) {
- //                        # code...
- //                        $message = "ak is error!";
- //                        $status = 1;
- //                        $success = false;
- //                        break;
- //                    }
- //                }
- //                elseif($index=='question_friends'){
- //                	$dataArray = json_decode($value,true);
- //                }
- //                else{
- //                    $message = "some parameters are not expected !";
- //                    $status = 2;
- //                    $success = false;
- //                    break;
-	// 			}
- //            }
-            
- //        	$contentArray = $this->question_model->get_question_from_friends($dataArray);
-        
- //            if($contentArray == null){
-            
- //                $status = 2;
- //                $message = '指定的用户不存在';
- //            }
-            
- //        }
- //        $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-	//   	echo json_encode($result);
-       
-        
- //    }
+
     public function get(){
+
+        // print_r(getcwd().'/application/libraries/Utils.php');
         $status = 0;
         $message = 'access is successful!';
         $contentArray = null;
@@ -368,19 +373,50 @@ class Question extends CI_Controller
                     unset($data[$index]);//去除start
                      
                 }
+                elseif ($index == 'topDistance') {
+                    
+                    $data['created_time <'] = $value;
+                    unset($data[$index]);//去除start
+                     
+                }
+                elseif ($index == 'distance') {
+     
+                    // $data['created_time <'] = $value;
+                    unset($data[$index]);//去除start
+                     
+                }
+                elseif ($index == 'lon') {
+     
+                    // $data['created_time <'] = $value;
+                    unset($data[$index]);//去除start
+                     
+                }
+                elseif ($index == 'lat') {
+     
+                    // $data['created_time <'] = $value;
+                    unset($data[$index]);//去除start
+                     
+                }
 
             }
+            //传了距离，经纬度，将其添加到data数组中
+            if (isset($_GET['distance']) && isset($_GET['lon']) && isset($_GET['lat']) ) {
+                $roundArray =  $this->utilsclass->getAround($_GET['lat'],$_GET['lon'],$_GET['distance']);
+                // print_r($roundArray);die();
 
-            // print_r($data);die();
+                if ($roundArray != null) {
+                   $data =  array_merge_recursive($data,$roundArray);
+
+                }
+                // print_r($data);die();
+            }
+
+
             $final_result_array = array();
             if ($status == 0) {
                 $ids = $this->question_model->getIDs($start,$data);
-                // print_r($ids);
-                // die();
-                $contentArray = $this->question_model->get_question($start,$data);
 
-                // print_r($contentArray);
-                // die();
+                $contentArray = $this->question_model->get_question($start,$data);
  
                 if($contentArray == null){
                 
@@ -390,25 +426,22 @@ class Question extends CI_Controller
                 //有破题内容
                 else{
                    $contentArray = $this->mergeSearchResult($contentArray);
-                    // print_r($final_result_array);
-                    // print_r($contentArray);
-                    // die();
+                    // print_r($contentArray);die();
+
                    $contentArray = array_values($contentArray);//去除索引值，变为一般数组
 
-                    // print_r($contentArray);
-                    // die();
                    foreach($contentArray as $index => $row) {
                         
                           $rowReplySum =  $this->question_model->getReplySum($row['id']);
                           $contentArray[$index]['replySum'] = $rowReplySum;
 
-                          // echo "replySum: ".$rowReplySum;
+                          //添加用户头像
+                          $avatar = $this->user_model->get_thumbIcon($row['q_user']);
+                          $contentArray[$index]['avatar_thumb_path'] = $avatar;
+                          // echo "user: ".$row['q_user'];
                           // echo "<br>";
                         
                     }
-                    // print_r($contentArray);
-                    // die();
-                    // $contentArray  = $final_result_array;
                 }
               
             }
@@ -462,8 +495,7 @@ class Question extends CI_Controller
             if ($status == 0 && $start != null) {
                 $contentArray = $this->question_model->get_question($start);//参数0--表示start从0开始算，返回limit个结果
                 $ids = $this->question_model->getIDs(0);
-                print_r($contentArray);
-                die();
+   
                 
                 if($contentArray == null){
                 
@@ -482,12 +514,82 @@ class Question extends CI_Controller
             
         }
         $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-	  	echo json_encode($result);
-        // echo base64_encode(json_encode($result));
+	  	// echo json_encode($result);
+        echo base64_encode(json_encode($result));
         
        
         
     }
+    /*更新操作 更新问题状态：已解决*/
+    public function update($q_id=FALSE)
+    {
+        $status = 0;
+        $message = 'access is successful!';
+        $contentArray = null;
+        $include_friends = false;
+        $data = array();
+
+        if (!$q_id) {
+            $status = 1;
+            $message = 'no specify q_id';
+        }
+        elseif ($_POST == null) {
+            $status = 4;
+            $message = 'no post params';
+        }
+        else
+        {
+            $exist = $this->question_model->getIDs(0, array('id' => $q_id ));
+
+            if ($exist != null && count($exist) > 0 ) {
+
+                // $data = $_POST;
+                //获取post参数
+                foreach($_POST as $index => $value) {
+                    if ($index=='best_reply') {
+                        # code...
+                        $data['best_reply'] = $value;
+                            // $postNums++;
+                        }
+                    else{
+                        $message = "some parameters are not expected !";
+                        $status = 2;
+                        $success = false;
+                        break;
+                    }
+                }
+
+                
+                if ($status == 0) {
+                    
+                        $contentArray = $this->question_model->update_question($q_id,$data);//参数0--表示start从0开始算，返回limit个结果
+                   
+                    
+                    if($contentArray != 1){
+                    
+                        $status = 3;
+                        $message = 'something wrong with SQL';
+                    }
+              
+
+                }
+            }
+            else
+            {
+                $status = 5;
+                $message = 'q_id is not exist';
+            }
+
+         
+            
+            
+        }
+        $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
+        // echo json_encode($result);
+        echo base64_encode(json_encode($result));
+        
+    }
+
     function mergeSearchResult($contentArray)
     {
         
@@ -495,21 +597,20 @@ class Question extends CI_Controller
         foreach ($contentArray as $row)
         {
             //有资源的问题
-            // if (isset($row['resource_spath']) && isset($row['resource_spath'])) {
-             // print_r($row['id']); 
-               if ($id_index != $row['id']) {
+
+                if($id_index != $row['id']) {
                     $id_index = $row['id'];
-                   # code...
+
                     $final_result_array[$id_index] = $row;
                     $final_result_array[$id_index]['resource_spath']  = array();
                     $final_result_array[$id_index]['resource_lpath']  = array();
                  
                     
-                   
-        
                }    
-               if ($row['resource_spath'] != null) {
+                if($row['resource_spath'] != null) {
                     array_push($final_result_array[$id_index]['resource_spath'],$row['resource_spath'] );
+                }
+                if ($row['resource_lpath'] != null) {
                     array_push($final_result_array[$id_index]['resource_lpath'],$row['resource_lpath'] );
                 }
             // }

@@ -23,7 +23,8 @@ class Story extends CI_Controller
        
         $this->load->model('story_model');
         $this->load->model('resource_model');
-
+        $this->load->model('user_model');
+        
         $this->resource_model->setDBName($this->resourceDB);
         // $this->load->controller('storage');
 	}
@@ -298,6 +299,12 @@ class Story extends CI_Controller
                 
                         $rowReplySum =  $this->story_model->getReplySum($row['id']);
                         $contentArray[$index]['replySum'] = $rowReplySum;
+
+
+                        //添加用户头像
+                        $avatar = $this->user_model->get_thumbIcon($row['s_user']);
+                        $contentArray[$index]['avatar_thumb_path'] = $avatar;
+                       
                     }
                     // die();
                     // $contentArray  = $final_result_array;

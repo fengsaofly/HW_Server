@@ -70,14 +70,23 @@ class Questionreply_model extends CI_Model{
 	*@param $data  如果没有传值，则表示就是在更新问题状态，如果有传了，就是更新data中指定的字段
 	*	
 	***/
-	public function update_QuestionReply($qr_id,$data=FALSE){
+	public function update_questionReply($id,$data=FALSE){
 		
+		$query = null;
 		if (!$data) {
-			$data  = array('q_status' => 1 );
+			$query  = "update ".$this->dbName." set status = status+1 where id = ".$id ;
+			$this->db->query($query);
 		}
+
+		else
+		{
+			$this->db->where($this->primaryKey, $id);
+		 	$this->db->update($this->dbName, $data);
+		}
+	  	
 		// $data = array_splice($_POST,4,1); 
-		$this->db->where($this->primaryKey, $q_id);
-		$this->db->update($this->dbName, $data);
+	
+		return $this->db->affected_rows();
 
 	}
     // public function get_QuestionReply($dataArray){

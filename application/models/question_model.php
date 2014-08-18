@@ -99,11 +99,13 @@ class Question_model extends CI_Model{
 	public function update_question($q_id,$data=FALSE){
 		
 		if (!$data) {
-			$data  = array('q_status' => 1 );
+			return null;	
 		}
-		// $data = array_splice($_POST,4,1); 
+		$data['q_state']  =  1 ;
 		$this->db->where($this->primaryKey, $q_id);
-		$this->db->update($this->dbName, $data);
+	    $this->db->update($this->dbName, $data);
+
+		return $this->db->affected_rows();
 
 	}
     // public function get_question($dataArray){
@@ -127,48 +129,6 @@ class Question_model extends CI_Model{
 	    // return	
 	}
 
-	public function renameUploadFile($targetName,$sourceName,$dbName,$shopid){
 
-		$domain = 'discounts';
-		//为文件增加后缀名
-		$pos = strripos($sourceName,'.'); 
-		$fileType = substr($sourceName,$pos);
-		
-		$targetName =  $targetName.$fileType;
-
-
-		$targetUrl = '/Shops/'.$shopid.'/'.$targetName;
-		// print_r($targetUrl);
-		$stor = new SaeStorage();
-		if ($dbName == $this->dbName) {
-			$sourceUrl = '/shops/'.$sourceName;
-			$idTag = 'shop_id';
-			$picTag = 'shop_pic';
-			$id = $shopid;
-		}
-		else{
-			$sourceUrl = '/discounts/'.$sourceName;
-			$idTag = 'discount_id';	
-			$picTag = 'discount_picture';
-			$id = $targetName;
-		}
-		$content = $stor->read( $domain , $sourceUrl) ;
-		if (!$content) {
-			die('获取源文件数据失败！');
-		}
-		if($result = $stor->write($domain,$targetUrl,$content))
-		{
-			$data  = array($picTag => $result );
-			$stor->delete($domain,$sourceUrl);
-			$this->db->where($idTag, $id);
-			$this->db->update($dbName, $data);
-			return $result;
-		}
-		else{
-         	var_dump($stor->errno(), $stor->errmsg());
-         	return FALSE;
- 		}
-         
-	}
 
 }

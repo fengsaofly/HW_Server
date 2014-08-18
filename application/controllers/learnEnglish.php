@@ -27,7 +27,7 @@ class LearnEnglish extends CI_Controller
        
         $this->load->model('learnenglish_model');
         $this->load->model('resource_model');
-
+        $this->load->model('user_model');
         //设置资源表
         $this->resource_model->setDBName($this->resourceDB);
         // $this->load->controller('storage');
@@ -305,6 +305,13 @@ class LearnEnglish extends CI_Controller
                 
                         $rowReplySum =  $this->learnenglish_model->getReplySum($row['id']);
                         $contentArray[$index]['replySum'] = $rowReplySum;
+
+
+                        //添加用户头像
+                        $avatar = $this->user_model->get_thumbIcon($row['l_user']);
+                        $contentArray[$index]['avatar_thumb_path'] = $avatar;
+                       
+                  
                     }
 
                 }

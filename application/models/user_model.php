@@ -8,6 +8,7 @@ class User_model extends CI_Model{
 	var $resource_foreign_key = 'u_avatar';
 	var $r_spath = 'resource_spath';
 	var $r_lpath = 'resource_lpath';
+	var $userName = 'user_name';
 	var $limit = DOWNLOAD_SLOT_SIZE;
 
 	public function __construct()
@@ -21,32 +22,19 @@ class User_model extends CI_Model{
 	*	
 	***/
 	// public function get_user($slug=FALSE,$limit)
-	public function get_user($start=-1,$params=FALSE)
+
+	public function get_user($userName)
 	{
 
 		$ids = array();
 		$q_id_array = array();
-		
-		$ids = $params ? $this->getIDs($start,$params) : $this->getIDs($start) ;
-		
-
-
-  		foreach ($ids as $row) {
-			array_push($q_id_array, $row['id']);
-		}
-		//没有数据，返回空
-		if (count($q_id_array) <= 0) {
-			return null;
-		}
 
 
 
-	  	$this->db->select('*');
+	  	$this->db->select('Q.'.$this->primaryKey.' as userId ,R.'.$this->r_spath.' ,R.'.$this->r_lpath.' ,Q.updated_time');
 		$this->db->from($this->dbName.' as Q ');
-		// $this->db->where('(Q.q_resource = R.resource_id) ');
 		$this->db->join($this->resource_db.' as R','R.resource_id = Q.'.$this->resource_foreign_key,'left');//左外连接
-		$this->db->where_in('Q.id',$q_id_array);
-		$this->db->order_by('Q.created_time desc');
+		$this->db->where($this->primaryKey,$userName);
 		
 
 		$query = $this->db->get();
@@ -92,6 +80,117 @@ class User_model extends CI_Model{
 
 	   return $query->row()->maxid + 1;
 	}
+	//获取指定用户的id
+	public function getUserId($userName)
+	{
+
+		$id  = 0;
+
+		$this->db->select('id');
+		$this->db->from($this->dbName);
+		$this->db->where($this->userName,$userName);
+
+		$q = $this->db->get();
+		$data = array_shift($q->result_array());
+
+		return $data['id'];
+}
+	//获取多人信息
+	public function get_icons($data)
+    {
+        
+        $this->db->select('*');
+		$this->db->from($this->dbName.' as Q ,'.$this->resource_db.' as R');
+		$this->db->where('R.resource_id = Q.'.$this->resource_foreign_key);//左外连接
+		$this->db->where_in('Q.'.$this->userName, $data);
+
+		$query = $this->db->get();
+		
+        return $query->result();
+
+    }
+    //只获取缩略图
+	public function get_thumbIcon($user_name)
+    {
+        
+        $this->db->select('R.'.$this->r_spath);
+		$this->db->from($this->dbName.' as Q ,'.$this->resource_db.' as R');
+		$this->db->where('R.resource_id = Q.'.$this->resource_foreign_key);//左外连接
+		$this->db->where_in('Q.'.$this->userName, $user_name);
+
+		$query = $this->db->get();
+		
+       	$data = array_shift($query->result_array());
+
+		return $data[$this->r_spath];
+
+    }
+	/*获取用户的id信息，包含isNew变量，指明用户是否是新用户*/
+	public function getID($userName)
+	{
+		$idInfo = array();
+
+		$id = $this->getUserId($userName) == null ? 0 : $this->getUserId($userName);
+
+		
+
+		//数据库没记录
+		if($id == 0)
+		{
+			$id = $this->get_next_id();
+			$idInfo['id'] = $id;
+			$idInfo['isNew'] = 'true';
+		}
+		else
+		{
+			// $id = $data['id'];
+			$idInfo['id'] = $id;
+			$idInfo['isNew'] = 'false';
+		}
+
+		return $idInfo;
+
+		
+	}
+	/*获取指定用户相关的问题和回复*/
+	public function get_question($start=-1,$params=FALSE)
+	{
+
+		$ids = array();
+		$q_id_array = array();
+		
+		// $ids = $params ? $this->getIDs($start,$params) : $this->getIDs($start) ;
+		$user = $params['user'];
+		// $start = $params['start'];
+
+		$query  = "select * from Question where q_user = ".$user." UNION 
+						SELECT *  FROM  QuestionReply where qr_user = ".$user."  
+								order by created_time desc limit ".$start." , ".$this->limit ;
+
+	  	$result = $this->db->query($query);
+		$error = $this->db->_error_message();
+
+		return $error ?  -1 : $result->result_array();
+	}
+	/*获取指定用户相关的问题和回复*/
+	public function get_story($start=-1,$params=FALSE)
+	{
+
+		$ids = array();
+		$q_id_array = array();
+		
+		// $ids = $params ? $this->getIDs($start,$params) : $this->getIDs($start) ;
+		$user = $params['user'];
+		// $start = $params['start'];
+
+		$query  = " SELECT *  FROM  StoryReply where sr_user = ".$user." UNION
+		 SELECT * from Story where s_user = ".$user." order by created_time desc limit ".$start." , ".$this->limit ;
+
+	  	$result = $this->db->query($query);
+		$error = $this->db->_error_message();
+
+		return $error ?  -1 : $result->result_array();
+	}
 	public function getIDs($start=-1,$params=FALSE)
 	{
 		$this->db->select('id');
@@ -108,18 +207,41 @@ class User_model extends CI_Model{
 		return $query->result_array();
 
 	}
+	public function getRecentQInfo($params=FALSE)
+	{
+		$user = '';
+		$time = null;
+		if (!$params) {
+			return -2;
+		}
+		if (isset($params['user']) && $params['user']!='') {
+			$user = $params['user'];
+		}
+		if (isset($params['time']) && $params['time']>0) {
+			$time = $params['time'];
+		}
+		$sql = "select QR.*,UR.resource_spath from QuestionReply as QR,User as U,U_Resource as UR 
+					where QR.qr_q in (select id from Question where q_user = '".$user."' ) 
+							and  QR.created_time > ".$time." and qr_user!='".$user."' and U.user_name = '".$user."' and u.u_avatar = UR.resource_id";
+	
+		$result = $this->db->query($sql);
+		$error = $this->db->_error_message();
+
+		return $error ?  -1 : $result->result_array();
+
+	}
 	/**
 	*更新问题，主要考虑更新问题状态：已解决 or 未解决 
 	*@param $data  如果没有传值，则表示就是在更新问题状态，如果有传了，就是更新data中指定的字段
 	*	
 	***/
-	public function update_user($user_name,$data=FALSE){
+	public function update_user($userID,$data=FALSE){
 		
 		if (!$data) {
 			return null;
 		}
 		// $data = array_splice($_POST,4,1); 
-		$this->db->where($this->primaryKey, $user_name);
+		$this->db->where($this->primaryKey, $userID);
 		$this->db->update($this->dbName, $data);
 
 	}

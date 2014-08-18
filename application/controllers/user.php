@@ -35,17 +35,18 @@ class User extends CI_Controller
 
       
 
-        $to = "350043263@qq.com";
-        $subject = "Test mail";
-        $message = "Hello! This is a simple email message. your HandWrite account code is : 123456";
-        $from = "123456@qq.com";
-        $headers = "From: $from";
-        mail($to,$subject,$message,$headers);
-        echo "Mail Sent.";
+        // $to = "350043263@qq.com";
+        // $subject = "Test mail";
+        // $message = "Hello! This is a simple email message. your HandWrite account code is : 123456";
+        // $from = "123456@qq.com";
+        // $headers = "From: $from";
+        // mail($to,$subject,$message,$headers);
+        // echo "Mail Sent.";
 
      
   
 	}
+
     //添加破题信息
 	function add() {
         $status = 0;
@@ -109,7 +110,14 @@ class User extends CI_Controller
 
 
                         //获取新增用户id
-                        $user_id = $this->user_model->get_next_id();
+                        $idInfo = $this->user_model->getID($data['user_name']);
+                        $user_id = $idInfo['id'];
+                        $isNew = $idInfo['isNew'] == 'true' ? true : false;
+
+                        //如果用户已经存在，则使用update方法
+                        if (!$isNew) {
+                            return $this->update($user_id);
+                        }
                         $data['id'] = $user_id;
                         //上传资源
                         $resultArray = $this->upload->multiple('u_avatar',$user_id,'User');
@@ -187,8 +195,8 @@ class User extends CI_Controller
            
 
         $statusArray  = array('status' => $status,'message'=>$message,'newIDs'=> $newIDs);
-        echo json_encode($statusArray);
-        // echo base64_encode(json_encode($statusArray));
+        // echo json_encode($statusArray);
+        echo base64_encode(json_encode($statusArray));
 
        	return true;
 	}
@@ -202,7 +210,7 @@ class User extends CI_Controller
     {
         $status = 0;
         $success = true;
-        $message = "add success";
+        $message = "update success";
         $data = array();
         $error= array();
         $newIDs = array();
@@ -214,12 +222,6 @@ class User extends CI_Controller
             $message = "not specify user_id!";
             $status = 1;
 
-        }
-        elseif ($_POST != null) 
-        {
-            $message = "not need post parameters!";
-            $status = 2;
-            
         }
         elseif ($_FILES == null) 
         {
@@ -257,7 +259,8 @@ class User extends CI_Controller
             // }
             if ($status == 0) {
                 //保存用户名
-                $data['user_id'] = $user_id;
+                // $data['user_id'] = $user_id;
+                // print_r($data);die();
                  //载入图片上传配置信息
                 $config['upload_path'] = STORAGE_BASE_URL;
                 $config['allowed_types'] = 'gif|jpg|png|jpeg|amr';
@@ -271,6 +274,7 @@ class User extends CI_Controller
                 //根据用户名获取用户id
                 $resourceInfo = $this->user_model->get_resourceID($user_id);
                 $u_avatar = $resourceInfo['u_avatar'] ;
+                // print_r($resourceInfo);die();
                 //去掉resource_id,方便删除spath，lpath
                 unset($resourceInfo['u_avatar']);
 
@@ -336,6 +340,8 @@ class User extends CI_Controller
                             $data['updated_time'] = time();
                             $newIDs['updated_time'] = $data['updated_time'];
                             $newIDs['u_id'] = $user_id ;
+                            // print_r($data);die();
+                            // unset($data['user_id']);
                             $this->user_model->update_user($user_id,$data);
                             //插入user表出错
                             if ($newIDs['u_id'] <= 0 ) {
@@ -417,59 +423,8 @@ class User extends CI_Controller
 
 
     }
- //    //获取指定用户信息
- //    public function view($user_identifier=false){
- //        $status = 0;
- //        $message = 'access is successful!';
- //        $contentArray = null;
- //        $dataArray = array();
- //        if($user_identifier==false){
-        
-            
- //            $status = 1;
- //            $message = '未指定用户id';
-            
-            
- //        }
- //        else
- //        {
- //            foreach($_POST as $index => $value) {
- //                if ($index=='ak') {
- //                    # code...
- //                    if ( $this->ak!=$value) {
- //                        # code...
- //                        $message = "ak is error!";
- //                        $status = 1;
- //                        $success = false;
- //                        break;
- //                    }
- //                }
- //                elseif($index=='user_friends'){
- //                	$dataArray = json_decode($value,true);
- //                }
- //                else{
- //                    $message = "some parameters are not expected !";
- //                    $status = 2;
- //                    $success = false;
- //                    break;
-	// 			}
- //            }
-            
- //        	$contentArray = $this->user_model->get_user_from_friends($dataArray);
-        
- //            if($contentArray == null){
-            
- //                $status = 2;
- //                $message = '指定的用户不存在';
- //            }
-            
- //        }
- //        $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-	//   	echo json_encode($result);
-       
-        
- //    }
-    public function get(){
+     //获取指定用户信息
+    public function get($user_name){
         $status = 0;
         $message = 'access is successful!';
         $contentArray = null;
@@ -492,6 +447,154 @@ class User extends CI_Controller
                     if ( $this->ak!=$value) {
                         # code...
                         $message = "ak is error!";
+                        $status = 2;
+                        $success = false;
+
+                        
+                        break;
+                    }
+
+                    unset($data[$index]);//去除ak
+
+                    
+                }
+
+
+            }
+
+            $final_result_array = array();
+            if ($status == 0) {
+                $user_id = $this->user_model->getUserId($user_name);
+        
+                $contentArray = $this->user_model->get_user($user_id);
+
+ 
+                if($contentArray == null){
+                
+                    $status = 0;
+                    $message = 'you specified user has no avatar';
+                }
+                //有破题内容
+                else{
+
+                //    // $contentArray = $this->mergeSearchResult($contentArray);
+
+                        // $contentArray = array_values($contentArray);//去除索引值，变为一般数组
+
+                }
+              
+            }
+            
+            
+        }
+        $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
+        // echo json_encode($result);
+        echo base64_encode(json_encode($result));
+    } 
+    //获取好友或多个用户的头像
+    function getInfos(){
+    
+        $status = 0;
+        $message = 'access is successful!';
+        $contentArray = null;
+        $include_friends = false;
+        $dataArray = array();
+        
+        if($_POST==null){
+         
+            $status = 1;
+            $message = 'no POST params';
+            
+        }
+        else
+        {
+             foreach($_POST as $index => $value) {
+                if ($index=='ak') {
+                    # code...
+                    if ( $this->ak!=$value) {
+                        # code...
+                        $message = "ak is error!";
+                        $status = 1;
+                        $success = false;
+                        break;
+                    }
+                }
+                elseif($index=='users'){
+                    $include_friends = true;
+                    //echo 'include_friends';
+                    $dataArray = json_decode($value,true);
+                    if($dataArray == null){
+                        $message = "find_friends decode result is null";
+                        $status = 3;
+                        break;
+                    }
+                }
+                else{
+                    $message = "some parameters are not expected !";
+                    $status = 2;
+                    $success = false;
+                    break;
+                }
+            }
+            if($status==0)
+            {
+               
+               if(!$include_friends){
+                
+                    $status = 4;
+                    $message = 'POST has no friends info';
+               }
+               else{
+                
+                     $jsonArray = array();
+                     foreach($dataArray as $index => $value) {
+                         $jsonVal = json_decode($value,true);
+                         $values = array_values($jsonVal);
+                         array_push($jsonArray,@$values[0]);
+ 
+                    }
+                    $contentArray = $this->user_model->get_icons($jsonArray);
+                    if($contentArray == null){
+                
+                        $status = 0;
+                        $message = 'search result is null';
+                    }
+               }
+                    
+            }
+           
+          
+            
+        }
+        $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
+        // echo json_encode($result);
+        echo base64_encode(json_encode($result));
+    }
+    //获取关于我的问题
+    public function getMyQuestion(){
+        $status = 0;
+        $message = 'access is successful!';
+        $contentArray = null;
+        $include_friends = false;
+        $data = array();
+        $start = 0;
+        $needGetNums = 1;
+
+        if($_GET==null){
+        
+            $status = 1;
+            $message = '未包含指定参数';
+            
+        }
+        else
+        {
+            $getNums=0;//必须post参数个数
+            foreach($_GET as $index => $value) {
+                if ($index=='ak') {
+                    # code...
+                    if ( $this->ak!=$value) {
+                        # code...
+                        $message = "ak is error!";
                         $status = 1;
                         $success = false;
 
@@ -503,6 +606,10 @@ class User extends CI_Controller
 
                     
                 }
+                elseif ($index == 'user') {
+                        $data['user'] = $value;
+                        $getNums++;
+                    }
                 elseif ($index == 'start') {
                         $start = $value;
                          unset($data[$index]);//去除start
@@ -511,8 +618,8 @@ class User extends CI_Controller
                 elseif ($index == 'floorTime') {
          
                         $data['created_time >'] = $value;
-                        unset($data[$index]);//去除start
-                         
+                        unset($data[$index]);//去除start0
+                   
                     }
                 elseif ($index == 'topTime') {
      
@@ -520,65 +627,64 @@ class User extends CI_Controller
                     unset($data[$index]);//去除start
                      
                 }
+                else
+                {
+                    $message = "some params are not needed!";
+                    $status = 2;
+                }
 
             }
-
-            // print_r($data);die();
-            $final_result_array = array();
-            if ($status == 0) {
-                $ids = $this->user_model->getIDs($start,$data);
-                // print_r($ids);
+          	// $final_result_array = array();
+           //  print_r($data);
                 // die();
-                $contentArray = $this->user_model->get_user($start,$data);
+            if ($status == 0 ) {
 
-                // print_r($contentArray);
-                // die();
- 
-                if($contentArray == null){
-                
+                if ($getNums < $needGetNums) {
+                    $message = "some params are not needed!";
                     $status = 2;
-                    $message = 'no users you can get';
                 }
-                //有破题内容
+
                 else{
-                   $contentArray = $this->mergeSearchResult($contentArray);
-                    // print_r($final_result_array);
+
+                    $contentArray = $this->user_model->get_question($start,$data);
+                    // $contentArray = $this->user_model->get_user($start);//参数0--表示start从0开始算，返回limit个结果
+                    // $ids = $this->user_model->getIDs(0);
                     // print_r($contentArray);
                     // die();
-                   $contentArray = array_values($contentArray);//去除索引值，变为一般数组
-
-                    // print_r($contentArray);
-                    // die();
-                   foreach($contentArray as $index => $row) {
-                        
-                          $rowReplySum =  $this->user_model->getReplySum($row['id']);
-                          $contentArray[$index]['replySum'] = $rowReplySum;
-
-                          // echo "replySum: ".$rowReplySum;
-                          // echo "<br>";
-                        
+                    
+                    if($contentArray == null){
+                    
+                        $status = 2;
+                        $message = 'no users you can get';
                     }
-                    // print_r($contentArray);
-                    // die();
-                    // $contentArray  = $final_result_array;
+                    //有破题内容
+                    else{
+                        //合并搜索结果
+                        // $contentArray = $this->mergeSearchResult($contentArray);
+                        $contentArray = array_values($contentArray);
+                    }
                 }
+
               
             }
-            
+        	
             
         }
         $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-        echo json_encode($result);
-        // echo base64_encode(json_encode($result));
-    } 
-      //获取所有用户信息
-    public function getAll(){
+	  	// echo json_encode($result);
+        echo base64_encode(json_encode($result)); 
+        
+    }
+    /*获取关于我的校园故事*/
+    public function getMyStory(){
         $status = 0;
         $message = 'access is successful!';
         $contentArray = null;
         $include_friends = false;
-        $dataArray = array();
-        
+        $data = array();
+        $start = 0;
+        $needGetNums = 1;
+
         if($_GET==null){
         
             $status = 1;
@@ -587,7 +693,8 @@ class User extends CI_Controller
         }
         else
         {
-             foreach($_GET as $index => $value) {
+            $getNums=0;//必须post参数个数
+            foreach($_GET as $index => $value) {
                 if ($index=='ak') {
                     # code...
                     if ( $this->ak!=$value) {
@@ -595,46 +702,178 @@ class User extends CI_Controller
                         $message = "ak is error!";
                         $status = 1;
                         $success = false;
+
+                        
                         break;
                     }
+
+                    unset($data[$index]);//去除ak
+
+                    
                 }
-                elseif ($index=='start') {
-                    # code...
-                    $start = $value;
-                    // $postNums++;
+                elseif ($index == 'user') {
+                        $data['user'] = $value;
+                        $getNums++;
+                    }
+                elseif ($index == 'start') {
+                        $start = $value;
+                         unset($data[$index]);//去除start
+                    }
+
+                elseif ($index == 'floorTime') {
+         
+                        $data['created_time >'] = $value;
+                        unset($data[$index]);//去除start0
+                   
+                    }
+                elseif ($index == 'topTime') {
+     
+                    $data['created_time <'] = $value;
+                    unset($data[$index]);//去除start
+                     
                 }
-                else{
-                    $message = "some parameters are not expected !";
+                else
+                {
+                    $message = "some params are not needed!";
                     $status = 2;
-                    $success = false;
-                    break;
                 }
+
             }
-          	$final_result_array = array();
-            if ($status == 0 && $start != null) {
-                $contentArray = $this->user_model->get_user($start);//参数0--表示start从0开始算，返回limit个结果
-                $ids = $this->user_model->getIDs(0);
-                print_r($contentArray);
-                die();
-                
-                if($contentArray == null){
-                
+            // $final_result_array = array();
+           //  print_r($data);
+                // die();
+            if ($status == 0 ) {
+
+                if ($getNums < $needGetNums) {
+                    $message = "some params are not needed!";
                     $status = 2;
-                    $message = 'no users you can get';
                 }
-                //有破题内容
+
                 else{
-                    //合并搜索结果
-                    $contentArray = $this->mergeSearchResult($contentArray);
-                    $contentArray = array_values($contentArray);
+
+                    $contentArray = $this->user_model->get_story($start,$data);
+                    // $contentArray = $this->user_model->get_user($start);//参数0--表示start从0开始算，返回limit个结果
+                    // $ids = $this->user_model->getIDs(0);
+                    // print_r($contentArray);
+                    // die();
+                    
+                    if($contentArray == null){
+                    
+                        $status = 2;
+                        $message = 'no users you can get';
+                    }
+                    //有破题内容
+                    else{
+                        //合并搜索结果
+                        // $contentArray = $this->mergeSearchResult($contentArray);
+                        $contentArray = array_values($contentArray);
+                    }
                 }
+
               
             }
-        	
+            
             
         }
         $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-	  	// echo json_encode($result);
+        // echo json_encode($result);
+        echo base64_encode(json_encode($result)); 
+        
+    }
+    function getRecentQInfo($user_name = FALSE)
+    {
+        $status = 0;
+        $message = 'access is successful!';
+        $contentArray = null;
+        $include_friends = false;
+        $data = array();
+        $start = 0;
+        $needGetNums = 1;
+
+        if($_GET==null){
+        
+            $status = 1;
+            $message = '未包含指定参数';
+            
+        }
+        elseif (!$user_name) {
+            $status = 7;
+            $message = 'no specify user';
+        }
+        else
+        {
+            $data['user'] = $user_name;
+
+            // print_r($_GET);
+            $getNums=0;//必须post参数个数
+            foreach($_GET as $index => $value) {
+                if ($index=='ak') {
+                    # code...
+                    if ( $this->ak!=$value) {
+                        # code...
+                        $message = "ak is error!";
+                        $status = 1;
+                        $success = false;
+
+                        
+                        break;
+                    }
+
+
+                    
+                }
+                elseif ($index == 'time') {
+                    $data['time'] = $value;
+                    $getNums++;
+                }
+
+                else
+                {
+
+                    // print_r($index.$value);
+                    $message = "some params are not needed!";
+                    $status = 2;
+                }
+
+            }
+            // $final_result_array = array();
+           //  print_r($data);
+                // die();
+            if ($status == 0 ) {
+
+                if ($getNums < $needGetNums) {
+                    $message = "some params are not needed!";
+                    $status = 2;
+                }
+
+                else{
+
+                    $contentArray = $this->user_model->getRecentQInfo($data);
+                    // $contentArray = $this->user_model->get_user($start);//参数0--表示start从0开始算，返回limit个结果
+                    // $ids = $this->user_model->getIDs(0);
+                    // print_r($contentArray);
+                    // die();
+                    
+                    if($contentArray == null){
+                    
+                        $status = 2;
+                        $message = 'no infos you can get';
+                    }
+                    //有破题内容
+                    else{
+                        //合并搜索结果
+                        // $contentArray = $this->mergeSearchResult($contentArray);
+                        $contentArray = array_values($contentArray);
+                    }
+                }
+
+              
+            }
+            
+            
+        }
+        $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
+        // echo json_encode($result);
         echo base64_encode(json_encode($result)); 
         
     }

@@ -25,7 +25,7 @@ class LearnEnglishReply extends CI_Controller
         $this->load->model('learnenglishreply_model');
         $this->load->model('resource_model');
         // $this->load->controller('storage');
-
+        $this->load->model('user_model');
         $this->resource_model->setDBName($this->resourceDB);
 	}
 
@@ -211,58 +211,7 @@ class LearnEnglishReply extends CI_Controller
 
 
     }
- //    //获取指定用户信息
- //    public function view($user_identifier=false){
- //        $status = 0;
- //        $message = 'access is successful!';
- //        $contentArray = null;
- //        $dataArray = array();
- //        if($user_identifier==false){
-        
-            
- //            $status = 1;
- //            $message = '未指定用户id';
-            
-            
- //        }
- //        else
- //        {
- //            foreach($_POST as $index => $value) {
- //                if ($index=='ak') {
- //                    # code...
- //                    if ( $this->ak!=$value) {
- //                        # code...
- //                        $message = "ak is error!";
- //                        $status = 1;
- //                        $success = false;
- //                        break;
- //                    }
- //                }
- //                elseif($index=='learnEnglishReply_friends'){
- //                	$dataArray = json_decode($value,true);
- //                }
- //                else{
- //                    $message = "some parameters are not expected !";
- //                    $status = 2;
- //                    $success = false;
- //                    break;
-	// 			}
- //            }
-            
- //        	$contentArray = $this->learnenglishreply_model->get_learnEnglishReply_from_friends($dataArray);
-        
- //            if($contentArray == null){
-            
- //                $status = 2;
- //                $message = '指定的用户不存在';
- //            }
-            
- //        }
- //        $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-	//   	echo json_encode($result);
-       
-        
- //    }
+
     public function get($lr_l=false){
         $status = 0;
         $message = 'access is successful!';
@@ -334,9 +283,16 @@ class LearnEnglishReply extends CI_Controller
                     }
                     //有内容
                     else{
-                       // $contentArray = $this->mergeSearchResult($contentArray);
-                       $contentArray = array_values($contentArray);
-                            
+
+                        $contentArray = array_values($contentArray);
+                        foreach($contentArray as $index => $row) {
+                
+                        //添加用户头像
+                        $avatar = $this->user_model->get_thumbIcon($row['lr_user']);
+                        $contentArray[$index]['avatar_thumb_path'] = $avatar;
+                       
+                  
+                        }    
                     
 
                     }
