@@ -25,7 +25,7 @@ class User extends CI_Controller
        
         $this->load->model('user_model');
         $this->load->model('resource_model');
-
+        $this->load->library('Mailer');
         $this->resource_model->setDBName($this->resourceDB);
         // $this->load->controller('storage');
 	}
@@ -231,32 +231,7 @@ class User extends CI_Controller
         else
         {
             $postNums=0;//必须post参数个数
-            // $resIndex=0;
-            // foreach($_POST as $index => $value) {
-                
-            //     // if ($index=='ak') {
-            //     //     # code...
-            //     //     if ( $this->ak!=$value) {
-            //     //         # code...
-            //     //         $message = "ak is error!";
-            //     //         $status = 1;
-            //     //         $success = false;
 
-                        
-            //     //         break;
-            //     //     }
-
-            //     //     unset($data[$index]);//去除ak
-
-                    
-            //     // }
-            //     else{
-            //         $message = "some parameters are not expected !";
-            //         $status = 4;
-            //         $success = false;
-            //         break;
-            //     }
-            // }
             if ($status == 0) {
                 //保存用户名
                 // $data['user_id'] = $user_id;
@@ -359,7 +334,7 @@ class User extends CI_Controller
                                     $relatePath =  substr($value,$pos);
                                     $absPath = getcwd().$relatePath;
                                     //删除文件
-                                    unlink($absPath);
+                                    @unlink($absPath);
                                 }
                                 
                                 
@@ -804,7 +779,7 @@ class User extends CI_Controller
         {
             $data['user'] = $user_name;
 
-            // print_r($_GET);
+            print_r($_GET);
             $getNums=0;//必须post参数个数
             foreach($_GET as $index => $value) {
                 if ($index=='ak') {
@@ -829,8 +804,7 @@ class User extends CI_Controller
 
                 else
                 {
-
-                    // print_r($index.$value);
+    
                     $message = "some params are not needed!";
                     $status = 2;
                 }
@@ -873,8 +847,8 @@ class User extends CI_Controller
             
         }
         $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
-        // echo json_encode($result);
-        echo base64_encode(json_encode($result)); 
+        echo json_encode($result);
+        // echo base64_encode(json_encode($result)); 
         
     }
     function mergeSearchResult($contentArray)
@@ -914,7 +888,96 @@ class User extends CI_Controller
 
         return TRUE;
     }
+    public function retrievePWD($user_name)
+    {
+        $status = 0;
+        $message = 'access is successful!';
+        $contentArray = null;
+        $data = array();
 
+        $email = $this->user_model->get_email($user_name);
+        if($email == null){
+            $status = 1;
+            $message = 'specified user`s email is null';
+        }
+        else
+        {
+            foreach($_GET as $index => $value) {
+                if ($index=='ak') {
+                    # code...
+                    if ( $this->ak!=$value) {
+                        # code...
+                        $message = "ak is error!";
+                        $status = 1;
+                        $success = false;
+
+                        
+                        break;
+                    }
+
+                }
+
+                else
+                {
+
+                    $message = "some params are not needed!";
+                    $status = 2;
+                }
+
+            }
+            if ($status != 0) {
+                $message = "something wrong";
+                $status = 3;
+            }
+            else
+            {
+                print_r($email);
+                $time = date("Y-m-d H:i:s"); 
+
+            
+                $mail_body =   '<div style="padding:72px 100px">
+                    <div style="height:71px;background:#51a0e3;"><img src="../../images/cq_logo.png" title="破题高手安全设置提醒"></div>
+                    <div style="padding:37px 0 81px 0;border:1px solid #e7e7e7;font-size:14px;color:#6e6e6e;background:#FFF;">
+                        <div style="padding:0 0 10px 41px;font-weight:bold;color:#6e6e6e;">亲爱的破题高手用户：</div>
+                        <div style="padding:0 0 26px 41px;color:#6e6e6e;">您的帐号 <span style="color:#efa229;font-weight:bold;"><a style="color:#efa229;text-decoration:none;cursor:text;">'.$user_name.'</a></span> 请求找回密码，操作已成功！</div>
+      
+                        <div style="padding:0 0 26px 41px;">您的密码已被重置为:<span style="color:#efa229;font-weight:bold;"><a style="color:#333333;text-decoration:none;cursor:text;"> 123456</a></span>                             
+                        </div>
+                        <div style="padding:0 0 26px 41px;color:#6e6e6e;">
+                            <div style="padding-bottom:8px;">破题高手</div>
+                            <div><span style="border-bottom:1px dashed #ccc;" t="5" times="">'.$time.'</span></div>
+                        </div>
+                        <div style="padding:0 0 26px 41px;color:#6e6e6e;font-size:12px;">
+                            本电子邮件地址不能接受回复邮件。有关详情，请访问 <a href="http://help.163.com/special/sp/urs_index.html" target="_blank" style="color:#3058a8;">破题高手帮助中心</a>。
+                        </div>
+                    </div>
+                    <div style="width:700px;height:129px;padding-top:20px;overflow:hidden;">
+                        <a href="http://reg.163.com/yixin/caipiaoact.do#from=ursgnzyyc" target="_blank" style="border:none;"><img src="http://reg.163.com/images/secmail/adv.png" title="关注通行证公众号，帐号安全实时提醒。现在还有3元红包免费领！" style="border: none; display: none !important; visibility: hidden !important; opacity: 0 !important; background-position: 0px 0px;" width="0" height="0"></a>
+                    </div>
+                    <div style="padding-top:24px;text-align:right;color:#999;"><span style="border-bottom:1px dashed #ccc;" t="5" times="">'.$time.'</span>(本邮件由系统自动发出，请勿回复)</div>
+                </div>';
+
+                $contentArray = $this->mailer->sendmail(
+                                        $email,
+                                        '肖逸飞',
+                                        '密码找回 '.$time,
+                                        $mail_body
+                                    );
+
+                if ($contentArray == null) {
+                    $status = 5;
+                    $message = 'send mail failed';
+                }
+            }
+           
+        }
+
+      
+   
+        $result  = array('status' => $status, 'message'=> $message,'content'=>$contentArray);
+        echo json_encode($result);
+        // echo base64_encode(json_encode($result)); 
+    }
 
 }
 

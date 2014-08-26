@@ -35,14 +35,6 @@ class Question extends CI_Controller
         
         //******************** 配置信息 ********************************
 
-
-
-
-        // $params['smtp_port'];// $smtp_port;
-
-        // $params['relay_host'];// $relay_host;
-
-        // $this->time_out = 30; //is used in fsockopen() 
         $params = array();
 
         $params['server'] = "smtp.126.com";//SMTP服务器
@@ -62,36 +54,7 @@ class Question extends CI_Controller
 	public function index($page = 1) {
 
         // $this->mail->SMTPDebug  = 1;
-
-        $this->load->library('Mailer');
-        $mail_body =   '<div style="padding:72px 100px">
-                <div style="height:71px;background:#51a0e3;"><img src="../../images/cq_logo.png" title="破题高手安全设置提醒"></div>
-                <div style="padding:37px 0 81px 0;border:1px solid #e7e7e7;font-size:14px;color:#6e6e6e;background:#FFF;">
-                    <div style="padding:0 0 10px 41px;font-weight:bold;color:#6e6e6e;">亲爱的破题高手用户：</div>
-                    <div style="padding:0 0 26px 41px;color:#6e6e6e;">您的帐号 <span style="color:#efa229;font-weight:bold;"><a style="color:#efa229;text-decoration:none;cursor:text;">Flyln</a></span> 请求找回密码，操作已成功！</div>
-  
-                    <div style="padding:0 0 26px 41px;">您的密码已被重置为:<span style="color:#efa229;font-weight:bold;"><a style="color:#333333;text-decoration:none;cursor:text;"> 123456</a></span>                             
-                    </div>
-                    <div style="padding:0 0 26px 41px;color:#6e6e6e;">
-                        <div style="padding-bottom:8px;">破题高手</div>
-                        <div><span style="border-bottom:1px dashed #ccc;" t="5" times="">2014-07-25</span></div>
-                    </div>
-                    <div style="padding:0 0 26px 41px;color:#6e6e6e;font-size:12px;">
-                        本电子邮件地址不能接受回复邮件。有关详情，请访问 <a href="http://help.163.com/special/sp/urs_index.html" target="_blank" style="color:#3058a8;">破题高手帮助中心</a>。
-                    </div>
-                </div>
-                <div style="width:700px;height:129px;padding-top:20px;overflow:hidden;">
-                    <a href="http://reg.163.com/yixin/caipiaoact.do#from=ursgnzyyc" target="_blank" style="border:none;"><img src="http://reg.163.com/images/secmail/adv.png" title="关注通行证公众号，帐号安全实时提醒。现在还有3元红包免费领！" style="border: none; display: none !important; visibility: hidden !important; opacity: 0 !important; background-position: 0px 0px;" width="0" height="0"></a>
-                </div>
-                <div style="padding-top:24px;text-align:right;color:#999;"><span style="border-bottom:1px dashed #ccc;" t="5" times="">2014-07-25</span>(本邮件由系统自动发出，请勿回复)</div>
-            </div>';
-
-        $this->mailer->sendmail(
-            '350043263@qq.com',
-            '肖逸飞',
-            '密码找回 '.date('Y-m-d H:i:s'),
-            $mail_body
-        );
+        echo phpinfo();
     
   
 	}
@@ -113,7 +76,7 @@ class Question extends CI_Controller
         {
 
             $postNums=0;//必须post参数个数
-
+            // $resIndex=0;
             foreach($_POST as $index => $value) {
 
                 if ($index=='q_text_content') {
@@ -167,8 +130,14 @@ class Question extends CI_Controller
                     # code...
                   
                     //载入图片上传配置信息
-                    $this->loadImgUploadConfig();
-
+                    $config['upload_path'] = STORAGE_BASE_URL;
+                    $config['allowed_types'] = 'gif|jpg|png|jpeg|amr';
+                    $config['max_size'] = '5000';
+                    $config['max_width'] = '5000';
+                    $config['max_height'] = '4000';
+                    
+                    $this->load->library('upload', $config);
+                   
                     $user_id = $data['q_user'] ;
                     //上传资源
                     $resultArray = $this->upload->multiple('q_resources',$user_id);
@@ -183,7 +152,7 @@ class Question extends CI_Controller
                     else{
 
                         //载入图片压缩配置信息
-                        $this->loadImgResizeConfig();
+                        $this->initialImageResize();
 
                         // print_r($resultArray);
                         // 获取已上传图片真实路径
@@ -271,7 +240,7 @@ class Question extends CI_Controller
     *
     *
     */
-    private function loadImgResizeConfig()
+    private function initialImageResize()
     {
         $this->resizeConfig['image_library'] = 'gd2';
         $this->resizeConfig['source_image'] = './upload';
@@ -281,16 +250,6 @@ class Question extends CI_Controller
         $this->resizeConfig['height'] = 320; 
 
         $this->load->library('image_lib', $this->resizeConfig); 
-    }
-    public function loadImgUploadConfig()
-    {
-        $config['upload_path'] = STORAGE_BASE_URL;
-        $config['allowed_types'] = 'gif|jpg|png|jpeg|amr';
-        $config['max_size'] = '5000';
-        $config['max_width'] = '5000';
-        $config['max_height'] = '4000';
-
-        $this->load->library('upload', $config);
     }
     /**
     * @param image    图片url

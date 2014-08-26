@@ -172,6 +172,14 @@ class User_model extends CI_Model{
 
 		return $error ?  -1 : $result->result_array();
 	}
+
+	public function get_email($user)
+	{
+		$query = $this->db->get_where($this->dbName,  array('user_name' => $user));
+		$data = array_shift($query->result_array());
+
+		return $data['email'];
+	}
 	/*获取指定用户相关的问题和回复*/
 	public function get_story($start=-1,$params=FALSE)
 	{

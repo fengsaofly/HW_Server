@@ -62,17 +62,17 @@ class LearnEnglishReply extends CI_Controller
             {
                 //必须post参数个数
                 $postNums=0;
-
+                // print_r($_POST);
                 //获取post参数
                 foreach($_POST as $index => $value) {
 
             
-                    // if ($index=='lr_text') {
-                    //     # code...
-                    //     $data['lr_text'] = $value;
-                    //     $postNums++;
-                    // }
-                    if($index=='lr_user'){
+                    if ($index=='lr_text') {
+                        # code...
+                        $data['lr_text'] = $value;
+                        $postNums++;
+                    }
+                    elseif($index=='lr_user'){
                         $data['lr_user'] = $value;
                         $postNums++;
                     }

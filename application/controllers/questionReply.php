@@ -126,7 +126,7 @@ class QuestionReply extends CI_Controller
 
                             // print_r($_FILES);die();
                             //上传资源
-                            $resultArray = $this->upload->multiple('qr_resources',$user_id,'questionReply');
+                            $resultArray = $this->upload->multiple('qr_resources',$user_id,'questionreply');
                             
 
                             //上传资源出错
@@ -196,7 +196,7 @@ class QuestionReply extends CI_Controller
 
                         $newIDs['qr_id'] = $this->questionreply_model->set_questionReply($data);
                         $newIDs['created_time'] = $data['created_time'];
-                        // print_r($newIDs);
+                        // print_r($data);
                         // die();
                         //插入QuestionReply表出错
                         if ($newIDs['qr_id'] <= 0 ) {
@@ -468,27 +468,28 @@ class QuestionReply extends CI_Controller
     }
     function mergeSearchResult($contentArray)
     {
+        
         $id_index = 0;
         foreach ($contentArray as $row)
         {
-         
-         // print_r($row['id']); 
-           if ($id_index != $row['id']) {
-                $id_index = $row['id'];
-               # code...
-                $final_result_array[$id_index] = $row;
-                $final_result_array[$id_index]['resource_spath']  = array();
-                $final_result_array[$id_index]['resource_lpath']  = array();
-                array_push($final_result_array[$id_index]['resource_spath'],$row['resource_spath'] );
-                array_push($final_result_array[$id_index]['resource_lpath'],$row['resource_lpath'] );
-           }    
-           else
-           {
-                // print_r($row['resource_spath']);
-                array_push($final_result_array[$id_index]['resource_spath'],$row['resource_spath'] );
-                array_push($final_result_array[$id_index]['resource_lpath'],$row['resource_lpath'] );
-           }
-           
+            //有资源的问题
+
+                if($id_index != $row['id']) {
+                    $id_index = $row['id'];
+
+                    $final_result_array[$id_index] = $row;
+                    $final_result_array[$id_index]['resource_spath']  = array();
+                    $final_result_array[$id_index]['resource_lpath']  = array();
+                 
+                    
+               }    
+                if($row['resource_spath'] != null) {
+                    array_push($final_result_array[$id_index]['resource_spath'],$row['resource_spath'] );
+                }
+                if ($row['resource_lpath'] != null) {
+                    array_push($final_result_array[$id_index]['resource_lpath'],$row['resource_lpath'] );
+                }
+            // }
 
         }
         return $final_result_array;
